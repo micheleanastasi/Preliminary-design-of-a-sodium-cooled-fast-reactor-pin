@@ -10,11 +10,11 @@ def temp_coolant(z):
     :return: Temp of coolant at point T
     """
     # energy balance: f*int(Cp(T), Tin, T) - int(q', bottom_pin, z) / mass_flow = 0 ... Tout our goal.
-    # occorre metodo iterativo, in quanto Cp stesso dipende da temperatura!! x primo membro
+    # occorre metodo che minimizzi la funzione res affinche si trovi una temperatura che rispetti il bilancio energetico, in quanto Cp stesso dipende da temperatura!! x primo membro
     T_0 = 800 + 273.15 # K
     eqz_2 = f_pitch*integral_power_lin_distr(z) / cool_mass_flow  # valore num seconda parte eqz !! NB F PITCH=1/2 !!
     eqz_1 = sy.integrate(cool_spec_heat,temp)
-    res = eqz_1 - eqz_1.subs(temp,cool_temp_inlet) - eqz_2
+    res = eqz_1 - eqz_1.subs(temp,cool_temp_inlet) - eqz_2 # primo è integtale, secondo intehrale con sostituzione (quindi risolto) e terzo eqz_2
 
     T_coolant_at_z = iterative_solver(res,T_0)
     return T_coolant_at_z
