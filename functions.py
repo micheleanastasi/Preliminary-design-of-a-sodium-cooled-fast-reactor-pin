@@ -1,4 +1,4 @@
-import numpy as np
+ import numpy as np
 import scipy as sp
 from numpy import array
 import matplotlib.pyplot as plt
@@ -26,16 +26,32 @@ def power_lin_distribution(z):
     output = discrete_power[value]
     return output
 
-def integral_power_lin_distr():
+def integral_power_lin_distr(z):
     """
+    Calculate integral from bottom pos of pin (0) to z pf the power distribution
     :return:  power of the pin in W
     """
-    sum = 0
+    #area = 0
+    #unit = pin_top_pos / 10  #0.085
+    #discrete_power = array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498])*power_lin_max
+    #for i in range(0,len(discrete_power)-1):
+        #sum += discrete_power[i] * unit
+    
+    area = 0
     unit = pin_top_pos / 10  #0.085
-    discrete_power = array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498])*power_lin_max
-    for i in range(0,len(discrete_power)-1):
-        sum += discrete_power[i] * unit
-
+    value = int(pin_bottom_pos/unit)
+    
+    total = np.sum(discrete_power)*unit
+    
+    if value == 10:
+        output = total
+    else
+        for i in range(0,unit)
+            if i == unit
+                area += discrete_power[i] * (z - i*unit)
+            else
+                area += discrete_power[i]*unit
+    
     return sum
 
 ## Plot function for power distr.
