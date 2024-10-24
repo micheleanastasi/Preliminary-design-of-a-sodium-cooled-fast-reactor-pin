@@ -11,8 +11,8 @@ from design_specifications import *
 
 def iterative_solver(sy_funct, guess):
     """
-    Give result from interaction according to one variable
-    :param sy_funct: function to be iterated in Sympy format
+    Give result from interaction according to one variable: temperature
+    :param sy_funct: function to be iterated in Sympy format and temp as variable
     :param guess: initial value
     :return:
     """
@@ -20,9 +20,43 @@ def iterative_solver(sy_funct, guess):
     res_l = sy.lambdify(temp,res)
     out = sp.optimize.minimize((res_l),guess,tol=10e-3)
 
+    #print(out)
     return out.x[0]
 
+def plotting(funct,name=None,legend=None,x_label=None,y_label=None,x_lim=None,y_lim=None,plot=True):
+    """
+    :param funct: function to be plotted
+    :return: plot
+    """
+    xx = np.linspace(pin_bottom_pos, pin_top_pos, 100)
+    yy = np.zeros(100)
+
+    for i in range(0,len(xx)):
+        yy[i] = funct(xx[i])
+    plt.figure(name)
+    if legend != None:
+        plt.plot(xx,yy,label = legend)
+    else:
+        plt.plot(xx, yy)
+    if x_label is not None:
+        plt.xlabel(x_label)
+    if y_label is not None:
+        plt.ylabel(y_label)
+    if x_lim is not None:
+        plt.xlim(x_lim)
+    if y_lim is not None:
+        plt.ylim(y_lim)
+    if name is not None:
+        plt.title(name)
+    if legend is not None:
+        plt.legend()
+    plt.grid()
+    if plot is True:
+        plt.show()
+    return None
+
 #### END OF GENERAL FUNCTIONS ####
+
 
 #### POWER FUNCT ####
 
@@ -63,54 +97,5 @@ def integral_power_lin_distr(z):
                 area += discrete_power[i]*unit
     return area
 
-
-## Plot function for power distr.
-def plot_power_distribution():
-    """
-    Simply print the plot of power distribution, only fuel pin dimensions (0 to 0.85 m)
-
-    :param res: function to be plotted (from bottom to top of the pin)
-    :return: plot
-    """
-    num_range = 100
-    xx = np.linspace(pin_bottom_pos, pin_top_pos, num_range)
-    yy = np.zeros(num_range) # initialized
-    for i in range(0,len(yy)):
-        yy[i] = power_lin_distribution(xx[i])
-    plt.figure("Linear power distribution")
-    plt.plot(xx,yy)
-    plt.xlabel("Fuel pin axis in [m]")
-    plt.ylabel("Linear power in [W/m]")
-    plt.title("Linear power distribution")
-    plt.ylim([0,40000])
-    plt.grid()
-    plt.show()
-    return None
-
-def plot_integral_power_distribution():
-    """
-    Simply print the plot of power distribution, only fuel pin dimensions (0 to 0.85 m)
-
-    :param res: function to be plotted (from bottom to top of the pin)
-    :return: plot
-    """
-    num_range = 100
-    xx = np.linspace(pin_bottom_pos, pin_top_pos, num_range)
-    yy = np.zeros(num_range) # initialized
-    for i in range(0,len(yy)):
-        yy[i] = integral_power_lin_distr(xx[i])
-    plt.figure("Linear power distribution")
-    plt.plot(xx,yy)
-    plt.xlabel("Fuel pin axis in [m]")
-    plt.ylabel("Linear power in [W/m]")
-    plt.title("Linear power distribution")
-    plt.ylim([0,30000])
-    plt.grid()
-    plt.show()
-    return None
-
 #### END OF POWER FUNCT ####
 
-
-plot_power_distribution()
-plot_integral_power_distribution()

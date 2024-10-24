@@ -24,12 +24,11 @@ def plot_temp_coolant():
 
     xx = np.linspace(pin_bottom_pos, pin_top_pos, 100)
     yy = np.zeros(100)
-    yy_const = np.ones(100) * cool_T_boiling_atm
+
     for i in range(0,len(xx)):
         yy[i] = temp_coolant(xx[i])
     plt.figure("Coolant temperature profile")
     plt.plot(xx,yy,label = 'Temperature profile')
-    #plt.plot(xx,yy_const,'.', label = 'Boiling temperature')
     plt.xlabel("Fuel pin position in [m]")
     plt.ylabel("Temperature in [K]")
     plt.title("Coolant temperature profile")
@@ -38,13 +37,8 @@ def plot_temp_coolant():
     plt.show()
     return None
 
-test = temp_coolant(0.85) - 273.15
-print(f"T all'uscita del coolant in °C: {np.round(test,2)}")
-plot_temp_coolant()
-
 
 #### CORRELATION FUNCTIONS
-
 
 # in un punto preciso (esso può variare lungo z ????????) in base a temp in K; poi aggiungere dip da hydr diameter per HOT GEOMETRY
 def heat_transfer_coeff_local(temperature):
@@ -80,7 +74,6 @@ def temp_cladding_outer(temp_coolant_at_z,lin_power_at_z,correlation):
     return temp_clad_out
 
 def plot_temp_cladding_outer():
-
     xx = np.linspace(pin_bottom_pos, pin_top_pos, 100)
     yy = np.zeros(100)
     for i in range(0,len(xx)):
@@ -88,7 +81,6 @@ def plot_temp_cladding_outer():
         correlation = heat_transfer_coeff_local( temp_at_z )[0]
         power_lin = power_lin_distribution(xx[i])
         yy[i] = temp_cladding_outer(temp_at_z, power_lin, correlation)
-
     plt.figure("Coolant temperature profile")
     plt.plot(xx,yy,label = 'Temperature profile')
     #plt.plot(xx,yy_const,'.', label = 'Boiling temperature')
@@ -99,6 +91,29 @@ def plot_temp_cladding_outer():
     plt.grid()
     plt.show()
     return None
+
+### here unknown thickness!!! inoltre hot geometry, variazione D clad outer HP cons delta thickness cost...
+def temp_cladding_inner(z,clad_thick):
+    """
+    :param z: in [m]
+    :param clad_thick: in [m]
+    :return:
+    """
+    temp_ci_guess = (600+273.15)
+    temp_cool = temp_coolant(z)
+    htc,other = heat_transfer_coeff_local(temp_cool)
+
+    eqz_1 = temp - temp_cladding_outer( temp_cool, power_lin_distribution(z), htc ) # variable: temp
+    eqz_2 = power_lin_distribution(z) * clad_thick / ( pi * (clad_d_outer-2*clad_thick) * clad_thermal_cond ) # clad th cond dep. on temp too!
+    res = eqz_1 - eqz_2
+
+    output = iterative_solver(res,temp_ci_guess)
+    return output
+
+"""
+plotting(temp_coolant)
+test = temp_coolant(0.85) - 273.15
+print(f"T all'uscita del coolant in °C: {np.round(test,2)}")
 
 
 h, numbers = heat_transfer_coeff_local(400 + 273.15)
@@ -113,3 +128,5 @@ res = temp_cladding_outer(temp_at_z, power_lin, correlation)
 res -= 273.15
 
 print(res)
+"""
+print(temp_cladding_inner(0.85,80e-6))
