@@ -103,18 +103,47 @@ def temp_cladding_inner(z,clad_thick):
     temp_cool = temp_coolant(z)
     htc,other = heat_transfer_coeff_local(temp_cool)
 
-    eqz_1 = temp - temp_cladding_outer( temp_cool, power_lin_distribution(z), htc ) # variable: temp
+    eqz_1 = temp - temp_cladding_outer( temp_cool, power_lin_distribution(z), htc ) # variable: temp presa da mat_properties...
     eqz_2 = power_lin_distribution(z) * clad_thick / ( pi * (clad_d_outer-2*clad_thick) * clad_thermal_cond ) # clad th cond dep. on temp too!
     res = eqz_1 - eqz_2
 
     output = iterative_solver(res,temp_ci_guess)
     return output
 
+
+def temp_fuel_outer(z,temp_clad_in,fuel_diam_outer,delta_gap):
+
+    temp_fuel_outer_guess = 1000 + 273.15
+    delta_gap_eff = delta_gap + 10e-6 # m 10e-6 He poiché effettivo...
+
+    eqz_1 = temp - temp_clad_in
+    eqz_2 = power_lin_distribution(z) * delta_gap_eff / ( pi * fuel_diam_outer * helium_thermal_cond )
+
+    res = eqz_1 - eqz_2
+    out = iterative_solver(res,temp_fuel_outer_guess)
+    return out
+
+### da espandere per bene (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
+def temp_fueL_inner(z,temp_fuel_out):
+
+    temp_fuel_inner_guess = 1200 + 273.15
+
+    k_fuel = fuel_thermal_cond.subs(x_om,2) # per ora questi valori
+    k_fuel = k_fuel.subs(pu_conc,0.2)
+    k_fuel = k_fuel.subs(por,0.12)
+
+    eqz_1 = temp - temp_fuel_out
+    eqz_2 = power_lin_distribution(z) / (4*pi*k_fuel)
+    print(k_fuel)
+
+    res = eqz_1 - eqz_2
+    out = iterative_solver(res, temp_fuel_inner_guess)
+    return out
+
 """
 plotting(temp_coolant)
 test = temp_coolant(0.85) - 273.15
 print(f"T all'uscita del coolant in °C: {np.round(test,2)}")
-
 
 h, numbers = heat_transfer_coeff_local(400 + 273.15)
 print(h)
@@ -129,4 +158,6 @@ res -= 273.15
 
 print(res)
 """
-print(temp_cladding_inner(0.85,80e-6))
+print(temp_cladding_inner(0.85, 0.5e-3) - 273.15)
+print(temp_fuel_outer(0.85,temp_cladding_inner(0.85,0.5e-3),0.5e-3,80e-6) - 273.15)
+print(temp_fueL_inner(0.85,temp_fuel_outer(0.85,temp_cladding_inner(0.85,0.5e-3),0.5e-3,80e-6) - 273.15))

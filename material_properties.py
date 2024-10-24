@@ -10,6 +10,9 @@ cool_T_boiling_atm = 882 + 273.15 # K @ p = 0.1 Mpa
 temp = sy.Symbol('T[K]')
 temp_f = sy.Symbol('T[°F]')
 Pe_cool = sy.Symbol('Pe')
+x_om = sy.Symbol('x[O/M]')
+pu_conc = sy.Symbol('[Pu]')
+por = sy.Symbol('P')
 
 ## Coolant specific heat - input in K - output in J/kg/K
 cool_spec_heat = 1608 - 0.7481*temp + 3.929e-4*temp ** 2
@@ -40,3 +43,24 @@ clad_density = 7900*(1+ clad_eps_th )**-3
 ## Cladding thermal conductivity: Always Kelvin...
 clad_thermal_cond = 13.95 + 0.01163*(temp-273.15)
 
+
+#### HELIUM PROPERTIES ####
+helium_thermal_cond = 15.8e-4 * temp**0.79
+
+
+
+#### FUEL PROPERTIES ####
+
+# per adesso usare x = 2, Pu = 20%, por = 12%
+#thermal conductivity: kelvin...
+A = 0.01926 + 1.06e-6 * x_om + 2.63e-8 * pu_conc
+B = 2.39e-4 + 1.37e-13 * pu_conc
+D = 5.27e9
+E = 17109.5
+k_0 = ( 1/(A + B*temp) + (D/(temp**2))*exp(-E/temp) )*(1-por)**2.5
+# da aggiungere burn up dopo! ( al posto di 1)
+fuel_thermal_cond = 1.755 + (k_0 - 1.755)*1
+
+# melting temp
+# da aggiungere burn up dopo! ( al posto di 1)
+fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*1
