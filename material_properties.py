@@ -1,4 +1,3 @@
-
 import sympy as sy
 from sympy import exp
 
