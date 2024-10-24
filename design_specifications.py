@@ -1,4 +1,9 @@
 
+#### DATA GUESS ####
+clad_thickness_0 = 0.5e-3 # m
+clad_fuel_gap = 80e-6 # m
+
+
 #### THERMO HYDRAULICS ####
 cool_temp_inlet = 395 + 273.15 # K
 cool_mass_flow = 0.049 # kg/s
@@ -18,6 +23,7 @@ fuel_d_outer = 5.42e-3 #m
 fuel_height = 7e-3 # m
 
 fill_gas_temp_in = 20 # °C - initial temperature
+
 
 
 #### POWER DISTRIBUTION

@@ -23,8 +23,9 @@ def temp_coolant(z):
 #### CORRELATION FUNCTIONS ####
 # in un punto preciso (esso può variare lungo z ????????) in base a temp in K; poi aggiungere dip da hydr diameter per HOT GEOMETRY
 # {NB: dubbi su htc, occorre verifica h e Pr}
-def heat_transfer_coeff_local(temperature):
+def heat_transfer_coeff_local(temperature,clad_diam_out):
     """
+    :param clad_diam_out: in m - Varying parameter! (hot geometry)
     :param temperature: in [K]
     :return:
     """
@@ -35,8 +36,8 @@ def heat_transfer_coeff_local(temperature):
     spec_heat = cool_spec_heat.subs(temp,temperature) # J/Kg/K
     th_cond = cool_th_cond.subs(temp,temperature) # J/m/K
 
-    net_area = pin_pitch**2 * sqrt(3)/4 - 0.5*( pi*clad_d_outer**2/4 ) # m^2
-    hydr_diameter = clad_d_outer * ( (2*sqrt(3)/pi)*(pin_pitch/clad_d_outer)**2 - 1 ) # m
+    net_area = pin_pitch**2 * sqrt(3)/4 - 0.5*( pi*clad_diam_out**2/4 ) # m^2
+    hydr_diameter = clad_diam_out * ( (2*sqrt(3)/pi)*(pin_pitch/clad_diam_out)**2 - 1 ) # m
     avg_velocity = cool_mass_flow/( net_area*density) # m/s
 
     # adimensional numbers
@@ -53,9 +54,14 @@ def heat_transfer_coeff_local(temperature):
 #### TEMP PROFILE OF CLADDING (OUTER) ALONG Z AXIS ####
 # un giorno modifica pure cladding outer diam (th exp)
 def temp_cladding_outer(z,clad_d_out):
+    """
+    :param z: in m
+    :param clad_d_out: in m - Varying parameter! (hot geometry)
+    :return: in K
+    """
     sec_power_at_z = power_lin_distribution(z) / (pi*clad_d_out)
     temp_coolant_at_z = temp_coolant(z)
-    htc,other = heat_transfer_coeff_local(temp_coolant_at_z) # other contiene numeri adim, che non servono
+    htc,other = heat_transfer_coeff_local(temp_coolant_at_z,clad_d_out) # other contiene numeri adim, che non servono
     temp_clad_out = temp_coolant_at_z + sec_power_at_z/htc
     return temp_clad_out
 
@@ -63,9 +69,10 @@ def temp_cladding_outer(z,clad_d_out):
 ### here unknown thickness!!! inoltre hot geometry -> variazione D_clad_outer; HP cons delta thickness cost...
 def temp_cladding_inner(z,clad_d_out,clad_thick):
     """
+    :param clad_d_out: Varying parameter! (hot geometry)
     :param z: in [m]
-    :param clad_thick: in [m]
-    :return:
+    :param clad_thick: in [m] - UNKNOWN
+    :return: in K
     """
     temp_ci_guess = (600+273.15)
 
@@ -80,11 +87,11 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
 # NB variazione diam ext del fuel (hot geometry)
 def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
     """
-    :param clad_d_out:
+    :param clad_d_out: Varying parameter! (hot geometry)
     :param z: in m
-    :param fuel_diam_outer: in m
-    :param clad_th: in m
-    :param delta_gap: in m
+    :param fuel_diam_outer: in m - Varying parameter! (hot geometry)
+    :param clad_th: in m - UNKNOWN
+    :param delta_gap: in m - Varying parameter! (hot geometry) - UNKNOWN
     :return: in K
     """
     temp_fuel_outer_guess = 1000 + 273.15
@@ -101,7 +108,14 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
 
 ### da espandere per bene (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
 def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
-
+    """
+    :param z: in m
+    :param clad_d_out: - Varying parameter! (hot geometry)
+    :param fuel_diam_outer: - Varying parameter! (hot geometry)
+    :param clad_th: UNKNOWN
+    :param delta_gap: - Varying parameter! (hot geometry) - UNKNOWN
+    :return: in K
+    """
     temp_fuel_inner_guess = 1200 + 273.15
     temp_fuel_out = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap)
 

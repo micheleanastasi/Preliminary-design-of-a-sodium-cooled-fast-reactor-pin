@@ -18,10 +18,18 @@ def equation_temp_solver(sy_funct, guess):
     res = (sy_funct)**2
     res_l = sy.lambdify(temp,res)
     out = sp.optimize.minimize((res_l),guess,tol=10e-3)
-
     return out.x[0]
 
+def iterative_solver():
+
+
+
+    return None
+
+
 #### END OF GENERAL FUNCTIONS ####
+
+#### ******************************************************************** ####
 
 #### POWER FUNCTIONS ####
 
@@ -54,7 +62,6 @@ def power_lin_distribution(z):
     value = int(z/unit)
     output = discrete_power[value]
     return output  ## !
-
 
 def integral_power_lin_distr(z):
     """

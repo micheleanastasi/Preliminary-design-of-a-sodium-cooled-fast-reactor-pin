@@ -4,11 +4,6 @@ from thermal_functions import *
 
 xx = np.linspace(pin_bottom_pos,pin_top_pos,100)
 
-#### DATA GUESS ####
-clad_thickness_0 = 0.5e-3 # m
-clad_fuel_gap = 80e-6 # m
-
-
 #### DATA ARRAY ####
 yy_power_linear = np.zeros_like(xx)
 
@@ -36,6 +31,7 @@ titles_power = ['Position in [m]','Linear power [W/m]','Temp coolant [K]','Temp 
 
 df_power = pd.DataFrame(data_coldGeo_stepPower_power_tempZ, columns=titles_power)
 df_power.to_excel("data_coldGeo_stepPower_power_tempZ.xlsx",index=False)
+
 
 
 # ********************************************************* #
