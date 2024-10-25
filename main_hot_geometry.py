@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from PIL.ImageColor import colormap
 
 from thermal_functions import *
 
