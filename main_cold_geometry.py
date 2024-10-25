@@ -4,9 +4,8 @@ from thermal_functions import *
 
 xx = np.linspace(pin_bottom_pos,pin_top_pos,100)
 
-#### DATA ARRAY ####
+#### DATA ARRAY INITIALIZATION ####
 yy_power_linear = np.zeros_like(xx)
-
 yy_temp_coolant = np.zeros_like(xx)
 yy_temp_clad_out = np.zeros_like(xx)
 yy_temp_clad_in = np.zeros_like(xx)
@@ -16,12 +15,11 @@ yy_temp_fuel_in = np.zeros_like(xx)
 
 for i in range(0,len(xx)):
     yy_power_linear[i] = power_lin_distribution(xx[i])
-
     yy_temp_coolant[i] = temp_coolant(xx[i])
     yy_temp_clad_out[i] = temp_cladding_outer(xx[i],clad_d_outer)
     yy_temp_clad_in[i] = temp_cladding_inner(xx[i],clad_d_outer,clad_thickness_0)
-    yy_temp_fuel_out[i] = temp_fuel_outer(xx[i],clad_d_outer,fuel_d_outer,clad_thickness_0,clad_fuel_gap)
-    yy_temp_fuel_in[i] = temp_fuel_inner(xx[i],clad_d_outer,fuel_d_outer,clad_thickness_0,clad_fuel_gap)
+    yy_temp_fuel_out[i] = temp_fuel_outer(xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0)
+    yy_temp_fuel_in[i] = temp_fuel_inner(xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0)
 
 # ********************************************************* #
 # *********************** OUTPUTS ************************* #

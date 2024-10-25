@@ -20,12 +20,6 @@ def equation_temp_solver(sy_funct, guess):
     out = sp.optimize.minimize((res_l),guess,tol=10e-3)
     return out.x[0]
 
-def iterative_solver():
-
-
-
-    return None
-
 
 #### END OF GENERAL FUNCTIONS ####
 
@@ -61,7 +55,7 @@ def power_lin_distribution(z):
     discrete_power = peak_factor * power_lin_max
     value = int(z/unit)
     output = discrete_power[value]
-    return output  ## !
+    return interpolated_power(z)  ## ! output
 
 def integral_power_lin_distr(z):
     """
@@ -84,6 +78,6 @@ def integral_power_lin_distr(z):
             else: # otherwise give the area (power) of the steps
                 area += discrete_power[i]*unit
 
-    return area ## !
+    return integral_cosine_shape_power(z) ## ! area
 
 #### END OF POWER FUNCT ####

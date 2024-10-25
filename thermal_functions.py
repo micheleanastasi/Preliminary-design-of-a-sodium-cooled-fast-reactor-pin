@@ -85,16 +85,18 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
 
 
 # NB variazione diam ext del fuel (hot geometry)
-def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
+def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
     """
+    DELTA GAP UNKNOWN, it depends on Fuel out and Clad in, which depends itself on Thickness (CONST)
+        and Clad out (fixed by project but expanding...)
     :param clad_d_out: Varying parameter! (hot geometry)
     :param z: in m
     :param fuel_diam_outer: in m - Varying parameter! (hot geometry)
     :param clad_th: in m - UNKNOWN
-    :param delta_gap: in m - Varying parameter! (hot geometry) - UNKNOWN
     :return: in K
     """
     temp_fuel_outer_guess = 1000 + 273.15
+    delta_gap = (clad_d_out - 2 * clad_th - fuel_diam_outer) / 2
     delta_gap_eff = delta_gap + 10e-6 # m - 10e-6 He poiché effettivo...
     temp_clad_in = temp_cladding_inner(z,clad_d_out,clad_th)
 
@@ -107,7 +109,7 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
 
 
 ### da espandere per bene (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
-def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
+def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th):
     """
     :param z: in m
     :param clad_d_out: - Varying parameter! (hot geometry)
@@ -117,7 +119,7 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
     :return: in K
     """
     temp_fuel_inner_guess = 1200 + 273.15
-    temp_fuel_out = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap)
+    temp_fuel_out = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th)
 
     k_fuel = fuel_thermal_cond.subs(x_om,2) # per ora questi valori
     k_fuel = k_fuel.subs(pu_conc,0.2)
@@ -131,3 +133,18 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,delta_gap):
     out = equation_temp_solver(res, temp_fuel_inner_guess)
     return out
 
+
+def temp_fuel_inner_radial(z,clad_d_out_fuel_diam_outer,clad_th):
+
+
+
+    return None
+
+
+#### HOT GEOMETRY FUNCTION ####
+def diameter_th_exp_cladding(diam,temperature):
+    #return diam + diam * clad_eps_th.subs(temp,temperature) * (temperature - temp_in)
+    return diam + diam * clad_eps_th * (temperature - temp_in) ### RIVEDI QUESTA ROBA CHE FORSE MANCA IL DATO!
+
+def diameter_th_exp_fuel(diam,temperature):
+    return diam + diam * alfa_fuel * (temperature - temp_in)

@@ -34,7 +34,9 @@ Nu_cool = 7 + 0.025*Pe_cool**0.8
 clad_temp_melting = 1673 # K
 
 ## Linear thermal expansion: ATTENZIONE usare Kelvin!
-clad_eps_th = -3.101e-4 + 1.525e-5*(temp-273.15) + 2.75e-9*(temp-273.15)**2
+#clad_eps_th = -3.101e-4 + 1.525e-5*(temp-273.15) + 2.75e-9*(temp-273.15)**2
+clad_eps_th = 1.2e-5
+
 
 ## Cladding density: ATTENZIONE usare Kelvin (see above) - output in kg/m^3
 clad_density = 7900*(1+ clad_eps_th )**-3
@@ -63,3 +65,6 @@ fuel_thermal_cond = 1.755 + (k_0 - 1.755)*1
 # melting temp
 # da aggiungere burn up dopo! ( al posto di 1)
 fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*1
+
+#linear thermal ref fuel
+alfa_fuel = 1e-5 # @ 298.15 K
