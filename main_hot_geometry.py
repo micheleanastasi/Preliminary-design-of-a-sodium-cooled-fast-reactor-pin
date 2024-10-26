@@ -2,10 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from thermal_functions import *
+import plotly.io as pio
 
-# DOMAIN DISCRETIZATION
-xx = np.linspace(pin_bottom_pos,pin_top_pos,100)
-rr = np.linspace(0,fuel_d_outer/2,50)
+
+#### ***************** DOMAIN DISCRETIZATION ********************** ####
+xx = np.linspace(pin_bottom_pos,pin_top_pos,5)
+rr = np.linspace(0,fuel_d_outer/2,5)
 
 
 
@@ -114,3 +116,5 @@ ax.set_ylabel('Position along the pin [m]')
 ax.set_xlabel('Radius [m]')
 ax.set_zlabel('Temperature [K]')
 plt.show()
+
+pio.write_html(fig_1, file='Fuel_temp_radial.html')
