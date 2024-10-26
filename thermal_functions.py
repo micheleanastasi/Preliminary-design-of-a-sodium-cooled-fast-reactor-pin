@@ -133,8 +133,10 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
     eqz_1 = temp - temp_clad_in
     eqz_2 = power_lin_distribution(z) * delta_gap_eff / ( pi * fuel_diam_outer * helium_thermal_cond )
     res = eqz_1 - eqz_2
-
-    out = equation_temp_solver(res, temp_fuel_outer_guess)
+    if delta_gap >= 0:
+        out = equation_temp_solver(res, temp_fuel_outer_guess)
+    else:
+        out = 0
     return out, delta_gap
 
 

@@ -13,6 +13,8 @@ SO:
 - then: hot geo + restructuring + Pu redistribution
 - end: hot geo + "" + "" + burn up
 properties changing: k_fuel, Tm_fuel, ...
+
+NB CONTACT HEAT TRANSFER BTW FUEL AND CLADDING NOT CONSIDERED
 """
 
 import numpy as np
@@ -80,7 +82,7 @@ yy_gap = np.zeros([len(xx),1])
 yy_properties = np.zeros([len(xx),11])
 rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 
-clad_range = np.arange(0.5e-3,0.6e-3,0.05e-3)
+clad_range = np.arange(0.45e-3,0.6e-3,0.005e-3)
 clad_th = np.zeros_like(clad_range)
 temp_max = np.zeros_like(clad_range)
 margin_fuel = np.zeros_like(clad_range)
@@ -100,16 +102,17 @@ for clad_thickness_0 in clad_range:
     temp_max[k] = np.max(yy_hot_temp)
     margin_fuel[k] = fuel_temp_melting - temp_max[k] # hp T melting lower
     gap_min[k] = np.min(yy_gap)*1e6
-    print(f"Cladding thickness: {clad_th[k]} mm")
-    print(f"Max fuel inner temp: {temp_max[k]} K")
-    print(f"Gap: {gap_min[k]} um\n")
+    print(f"Cladding thickness: {np.round(clad_th[k],3)} mm")
+    print(f"Max fuel inner temp: {np.round(temp_max[k],2)} K")
+    print(f"Margin fuel to melting: {np.round(margin_fuel[k],2)} K")
+    print(f"Gap: {np.round(gap_min[k],3)} um\n")
     k += 1
 
 plt.figure()
 plt.plot(clad_th,temp_max,label='Max fuel temp')
+plt.xlim([0.44,0.61])
 plt.plot(xx, np.ones(len(xx)) * 2964.92, color='black', linestyle='--', label = 'Melting temp (CONS)') # tmelt provvisoria
 plt.plot(xx, np.ones(len(xx)) * fuel_temp_max_suggested, color='black', linestyle='--', label = 'Max suggested temp') # tmelt provvisoria
-plt.xlim
 plt.title("Max fuel temp acc. to clad thickness")
 plt.ylabel("K")
 plt.xlabel("Cladding thickness value in [mm]")
