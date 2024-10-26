@@ -91,7 +91,7 @@ plt.show()
 #### *********************** PLOT TEMPERATURES (RADIAL) ************************** ####
 # NB cold geo, no redistr, no restructuring, no burn up...
 plt.figure()
-plt.plot(rr,rr_temp_fuel_radial[50,:])
+plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:])
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Cold geometry, middle position (pin) fuel pellet temperature")
