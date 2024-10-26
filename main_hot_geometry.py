@@ -4,7 +4,9 @@ import pandas as pd
 from thermal_functions import *
 
 # DOMAIN DISCRETIZATION
-xx = np.linspace(pin_bottom_pos,pin_top_pos,10)
+xx = np.linspace(pin_bottom_pos,pin_top_pos,100)
+rr = np.linspace(0,fuel_d_outer/2,50)
+
 
 
 #### *************************** HOT GEOMETRY CALCULATIONS ************************** ####
@@ -44,21 +46,35 @@ def hot_geometry_iteration(z,clad_d_out_0,fuel_d_out_0,clad_thick_0):
 
         if np.abs(prec_temp_array[4] - temp_array[4] ) < tol : # va bene così (?)
             break
+
     print(f"Hot geo completed at {np.round(100*z/0.85,2)}% (Position: {np.round(z,2)} m) - Temp fuel inner: HOT:{np.round(temp_array[4],2)}, COLD:{np.round(old[4],2)} - Gap:{np.round(delta_gap*1000,6)} mm")
     other = np.array( list([yy_htc_loc]) + list(yy_adim_num_cool) + list(yy_cool_loc_prop) )
-    return old,temp_array,delta_gap,other
+    return old,temp_array,delta_gap,other, clad_d_out_0, fuel_d_out_0
 
 
-#### *********************** OUTPUT *********************** ####
+
+#### *********************** CALCS *********************** ####
+
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5])
 yy_hot_temp = np.zeros([len(xx),5])
 yy_gap = np.zeros([len(xx),1])
 yy_properties = np.zeros([len(xx),11])
+rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
+
+test = 0
 
 for i in range(0,len(xx)):
     yy_power_linear[i] = power_lin_distribution(xx[i])
-    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i],yy_properties[i,:] = hot_geometry_iteration(xx[i],clad_d_outer,fuel_d_outer,clad_thickness_0)
+    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i],yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_iteration(xx[i],clad_d_outer,fuel_d_outer,clad_thickness_0)
+    for j in range(0,len(rr)):
+        rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out,fuel_diam_outer,clad_thickness_0)
+        test += 1
+        print(f"Radial temp pellet calc complete at {np.round(100*test/(len(xx)*len(rr)),3)} %")
+
+
+
+#### ********************** EXCEL PRINT ********************* ####
 
 data_hotGeo_tempZ_cold = np.array([ xx,yy_power_linear,yy_cold_temp[:,0],yy_cold_temp[:,1],yy_cold_temp[:,2],yy_cold_temp[:,3],yy_cold_temp[:,4],yy_properties[:,0],
                                               yy_properties[:,1],yy_properties[:,2],yy_properties[:,3],yy_properties[:,4],yy_properties[:,5],yy_properties[:,6],yy_properties[:,7],yy_properties[:,8],yy_properties[:,9],yy_properties[:,10] ]).T
@@ -75,6 +91,7 @@ df_power = pd.DataFrame(data_hotGeo_tempZ_hot, columns=titles_power_hot)
 df_power.to_excel("data_hotGeo_interPower_tempZ_hot.xlsx",index=False)
 
 
+
 #### ***************** PLOT TEMPERATURES (AXIAL) ******************* ####
 plt.figure()
 plt.plot(xx,yy_cold_temp[:,3], label='COLD Fuel external',color='blue', linestyle='--')
@@ -86,4 +103,14 @@ plt.ylabel("Temperature in [K]")
 plt.title("Cold and hot geometry")
 plt.legend()
 plt.grid()
+plt.show()
+
+#### ***************** PLOT TEMPERATURES (AXIAL) ******************* ####
+x,y = np.meshgrid(xx,rr)
+fig_1 = plt.figure()
+ax = fig_1.add_subplot(111, projection='3d')
+ax.plot_surface(x,y,rr_temp_fuel_radial,cmap='viridis')
+ax.set_ylabel('Position along the pin [m]')
+ax.set_xlabel('Radius [m]')
+ax.set_zlabel('Temperature [K]')
 plt.show()

@@ -58,11 +58,11 @@ B = 2.39e-4 + 1.37e-13 * pu_conc
 D = 5.27e9
 E = 17109.5
 k_0 = ( 1/(A + B*temp) + (D/(temp**2))*exp(-E/temp) )*(1-por)**2.5
-# da aggiungere burn up dopo! ( al posto di 1)
+# da aggiungere burn up dopo! ( al posto di 1 --> hp conservativa???? )
 fuel_thermal_cond = 1.755 + (k_0 - 1.755)*1
 
 # melting temp
-# da aggiungere burn up dopo! ( al posto di 1)
+# da aggiungere burn up dopo! ( al posto di 1 --> hp conservativa???? )
 fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*1
 
 #linear thermal ref fuel

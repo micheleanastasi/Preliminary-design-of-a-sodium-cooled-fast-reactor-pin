@@ -46,6 +46,8 @@ def integral_cosine_shape_power(z):
 
 
 ## LINEAR POWER DISTRIBUTION FUNCTIONS - STEP FUNCTIONS ##
+#
+## approx or not: change True or False!!
 def power_lin_distribution(z,approx=True):
     unit = pin_top_pos / 10  #0.085
     peak_factor = array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498]) # ultimo ripetuto poicè si riferisce a z = 0.85

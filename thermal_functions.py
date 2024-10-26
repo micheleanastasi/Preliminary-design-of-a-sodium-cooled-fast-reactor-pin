@@ -141,7 +141,6 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
 #### ******************** TEMPERATURE PROFILE OF OUTER FUEL ALONG Z AXIS ********************** ####
 #
 # NB variazione diam ext del fuel (hot geometry)
-# NB considerare pure variazione composizione gas??
 #
 ## da espandere per bene (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
 def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th):
@@ -152,7 +151,7 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th):
     :param clad_th: UNKNOWN --- all these parameters used to calculate delta gap
     :return: in K
     """
-    temp_fuel_inner_guess = 1200 + 273.15
+    temp_fuel_inner_guess = 1500 + 273.15
 
     temp_fuel_out,_ = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th)
     k_fuel = fuel_thermal_cond.subs(x_om,2) # per ora questi valori
@@ -165,12 +164,35 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th):
     out = equation_temp_solver(res, temp_fuel_inner_guess)
     return out
 
+#### ******************** TEMPERATURE PROFILE OF OUTER FUEL ALONG RADIUS ********************** ####
+#
+# HP no azimuthal, angular dependence
+# NB variazione diam ext del fuel (hot geometry)
+#
+## da espandere per bene (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
+def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th):
+    """
+    :param r: in m
+    :param z: in m
+    :param clad_d_out: - Varying parameter! (hot geometry)
+    :param fuel_diam_outer: - Varying parameter! (hot geometry)
+    :param clad_th: UNKNOWN --- all these parameters used to calculate delta gap
+    :return: in K
+    """
+    temp_fuel_inner_guess = 1500 + 273.15
 
-def temp_fuel_inner_radial(z,clad_d_out_fuel_diam_outer,clad_th):
+    temp_fuel_out,_ = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th)
+    k_fuel = fuel_thermal_cond.subs(x_om,2) # per ora questi valori
+    k_fuel = k_fuel.subs(pu_conc,0.2)
+    k_fuel = k_fuel.subs(por,0.12)
 
+    fuel_radius_outer = fuel_diam_outer/2
+    eqz_1 = temp - temp_fuel_out
+    eqz_2 = ( power_lin_distribution(z) / ( 4*pi*k_fuel ) ) * ( 1 - (r/fuel_radius_outer)**2 )
 
-
-    return None
+    res = eqz_1 - eqz_2
+    output = equation_temp_solver(res,temp_fuel_inner_guess)
+    return output
 
 
 #### ********************************** HOT GEOMETRY FUNCTION **************************************** ####
@@ -179,4 +201,3 @@ def diameter_th_exp_cladding(diam,temperature):
 
 def diameter_th_exp_fuel(diam,temperature):
     return diam + diam * alfa_fuel * (temperature - temp_in)
-
