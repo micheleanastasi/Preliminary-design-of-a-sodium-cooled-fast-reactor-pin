@@ -3,14 +3,24 @@ from material_properties import *
 from design_specifications import *
 
 
-#### TEMP PROFILE OF COOLANT ALONG Z AXIS ####
+#### NOTE ####
+#
+# c'è ancora da considerare burn up effects
+# anche fission gases
+#
+##
+
+
+#### *********** TEMP PROFILE OF COOLANT ALONG Z AXIS ************ ####
+#
+# energy balance: f*int(Cp(T), Tin, T) - int(q', bottom_pin, z) / mass_flow = 0 ... Tout is our goal.
+#
+## occorre metodo che minimizzi la funzione res affinche si trovi una temperatura che rispetti il bilancio energetico, in quanto Cp stesso dipende da temperatura!!
 def temp_coolant(z):
     """
     :param z: position choice
     :return: Temp of coolant at point T
     """
-    # energy balance: f*int(Cp(T), Tin, T) - int(q', bottom_pin, z) / mass_flow = 0 ... Tout our goal.
-    # occorre metodo che minimizzi la funzione res affinche si trovi una temperatura che rispetti il bilancio energetico, in quanto Cp stesso dipende da temperatura!! x primo membro
     T_0 = 800 + 273.15 # K
     eqz_2 = f_pitch*integral_power_lin_distr(z) / cool_mass_flow  # valore num seconda parte eqz !! NB F PITCH=1/2 !!
     eqz_1 = sy.integrate(cool_spec_heat,temp)
@@ -20,14 +30,18 @@ def temp_coolant(z):
     return T_coolant_at_z
 
 
-#### CORRELATION FUNCTIONS ####
-# in un punto preciso (esso può variare lungo z ????????) in base a temp in K; poi aggiungere dip da hydr diameter per HOT GEOMETRY
-# {NB: dubbi su htc, occorre verifica h e Pr}
+## CORRELATION FUNCTIONS
+#
+# Calculated for each temperature of the coolant along z axis
+# HP: pitch btw pins constant, no cross-section of flows!!
+#
+#* {NB: possibile "dubbio" su htc, occorre verifica h e Pr}
 def heat_transfer_coeff_local(temperature,clad_diam_out):
     """
+    Get parameters of coolant such as heat transfer coeff., adim. numbers and avg_velocity: point by point, according to temperature and clad diameter!
     :param clad_diam_out: in m - Varying parameter! (hot geometry)
     :param temperature: in [K]
-    :return:
+    :return: htc, array with adim. numbers and array with some coolant/geometry properties calculated here
     """
     # parameters that are going to be useful below...
     temp_fahr = (temperature - 273.15) * 9 / 5 + 32 # conversione kelvin to fahrenheit
@@ -48,11 +62,13 @@ def heat_transfer_coeff_local(temperature,clad_diam_out):
 
     h = Nu*th_cond/hydr_diameter
     output_numbers = array([Re,Pr,Pe,Nu])
-    return h, output_numbers
+    properties = np.array([avg_velocity,net_area,density,dyn_viscosity,spec_heat,th_cond])
+    return h, output_numbers,properties
 
 
-#### TEMP PROFILE OF CLADDING (OUTER) ALONG Z AXIS ####
-# un giorno modifica pure cladding outer diam (th exp)
+#### ***************** TEMP PROFILE OF CLADDING (OUTER) ALONG Z AXIS ***************** ####
+#
+## un giorno modifica pure cladding outer diam (th exp)
 def temp_cladding_outer(z,clad_d_out):
     """
     :param z: in m
@@ -61,21 +77,31 @@ def temp_cladding_outer(z,clad_d_out):
     """
     sec_power_at_z = power_lin_distribution(z) / (pi*clad_d_out)
     temp_coolant_at_z = temp_coolant(z)
-    htc,other = heat_transfer_coeff_local(temp_coolant_at_z,clad_d_out) # other contiene numeri adim, che non servono
+    htc,_,_ = heat_transfer_coeff_local(temp_coolant_at_z,clad_d_out) # we need only htc
     temp_clad_out = temp_coolant_at_z + sec_power_at_z/htc
     return temp_clad_out
 
 
-### here unknown thickness!!! inoltre hot geometry -> variazione D_clad_outer; HP cons delta thickness cost...
+#### *********** TEMP PROFILE OF CLADDING (INNER) ALONG Z AXIS ************** ####
+#
+# as we don't know thickness, I'm just using a reasonable value (see design_specifications.py), only later we're going to solve for it...
+# anyway to find temperatures changes we only need to set the input and it's done! So quite easy
+#
+# HP thickness variation due to thermal exp assumed to be constant (to simplify calculations, reasonable approach): eventually demonstrable later anyway....
+#
+## OSS for hot geometry -> var. of D_clad_outer;
 def temp_cladding_inner(z,clad_d_out,clad_thick):
     """
+    Give the temperature profile of inner cladding
     :param clad_d_out: Varying parameter! (hot geometry)
     :param z: in [m]
-    :param clad_thick: in [m] - UNKNOWN
-    :return: in K
+    :param clad_thick: in [m] - UNKNOWN - Initially reasonable value used, then changed...
+    :return: in kelvin
     """
+    # Initial guess to solve stuff below...
     temp_ci_guess = (600+273.15)
 
+    # writing equation ( stuff ... ... = 0 ) to be solved via minimization by SciPy (see equation_temp_solver method in general_functions.py)
     eqz_1 = temp - temp_cladding_outer(z,clad_d_out) # variable: temp presa da mat_properties...
     eqz_2 = power_lin_distribution(z) * clad_thick / ( pi * (clad_d_outer-2*clad_thick) * clad_thermal_cond ) # clad th cond dep. on temp too!
     res = eqz_1 - eqz_2
@@ -84,20 +110,24 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
     return output
 
 
+#### ****************** TEMPERATURE PROFILE ALONG OUTER FUEL ******************* ####
+#
 # NB variazione diam ext del fuel (hot geometry)
+# NB considerare pure variazione composizione gas??
+##
 def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
     """
-    DELTA GAP UNKNOWN, it depends on Fuel out and Clad in, which depends itself on Thickness (CONST)
+    DELTA GAP UNKNOWN, it depends on Fuel out and Clad in, which depends itself on Thickness (ASSUMED CONSTANT)
         and Clad out (fixed by project but expanding...)
     :param clad_d_out: Varying parameter! (hot geometry)
-    :param z: in m
-    :param fuel_diam_outer: in m - Varying parameter! (hot geometry)
+    :param z: in meters
+    :param fuel_diam_outer: in meters - Varying parameter! (hot geometry)
     :param clad_th: in m - UNKNOWN
-    :return: in K
+    :return: temperature and also delta gap
     """
     temp_fuel_outer_guess = 1000 + 273.15
     delta_gap = (clad_d_out - 2 * clad_th - fuel_diam_outer) / 2
-    delta_gap_eff = delta_gap + 10e-6 # m - 10e-6 He poiché effettivo...
+    delta_gap_eff = delta_gap + 10e-6 # m - 10e-6 He as we consider initially 100% He...
     temp_clad_in = temp_cladding_inner(z,clad_d_out,clad_th)
 
     eqz_1 = temp - temp_clad_in
@@ -105,30 +135,32 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
     res = eqz_1 - eqz_2
 
     out = equation_temp_solver(res, temp_fuel_outer_guess)
-    return out
+    return out, delta_gap
 
 
-### da espandere per bene (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
+#### ******************** TEMPERATURE PROFILE OF OUTER FUEL ALONG Z AXIS ********************** ####
+#
+# NB variazione diam ext del fuel (hot geometry)
+# NB considerare pure variazione composizione gas??
+#
+## da espandere per bene (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
 def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th):
     """
     :param z: in m
     :param clad_d_out: - Varying parameter! (hot geometry)
     :param fuel_diam_outer: - Varying parameter! (hot geometry)
-    :param clad_th: UNKNOWN
-    :param delta_gap: - Varying parameter! (hot geometry) - UNKNOWN
+    :param clad_th: UNKNOWN --- all these parameters used to calculate delta gap
     :return: in K
     """
     temp_fuel_inner_guess = 1200 + 273.15
-    temp_fuel_out = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th)
 
+    temp_fuel_out,_ = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th)
     k_fuel = fuel_thermal_cond.subs(x_om,2) # per ora questi valori
     k_fuel = k_fuel.subs(pu_conc,0.2)
     k_fuel = k_fuel.subs(por,0.12)
 
     eqz_1 = temp - temp_fuel_out
     eqz_2 = power_lin_distribution(z) / (4*pi*k_fuel)
-    #print(k_fuel)
-
     res = eqz_1 - eqz_2
     out = equation_temp_solver(res, temp_fuel_inner_guess)
     return out
@@ -141,10 +173,10 @@ def temp_fuel_inner_radial(z,clad_d_out_fuel_diam_outer,clad_th):
     return None
 
 
-#### HOT GEOMETRY FUNCTION ####
+#### ********************************** HOT GEOMETRY FUNCTION **************************************** ####
 def diameter_th_exp_cladding(diam,temperature):
-    #return diam + diam * clad_eps_th.subs(temp,temperature) * (temperature - temp_in)
-    return diam + diam * clad_eps_th * (temperature - temp_in) ### RIVEDI QUESTA ROBA CHE FORSE MANCA IL DATO!
+    return diam + diam * alfa_cladding * (temperature - temp_in) ### RIVEDI QUESTA ROBA CHE FORSE MANCA IL DATO!
 
 def diameter_th_exp_fuel(diam,temperature):
     return diam + diam * alfa_fuel * (temperature - temp_in)
+

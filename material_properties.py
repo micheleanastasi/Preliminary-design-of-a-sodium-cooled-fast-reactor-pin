@@ -34,8 +34,8 @@ Nu_cool = 7 + 0.025*Pe_cool**0.8
 clad_temp_melting = 1673 # K
 
 ## Linear thermal expansion: ATTENZIONE usare Kelvin!
-#clad_eps_th = -3.101e-4 + 1.525e-5*(temp-273.15) + 2.75e-9*(temp-273.15)**2
-clad_eps_th = 1.2e-5
+clad_eps_th = -3.101e-4 + 1.525e-5*(temp-273.15) + 2.75e-9*(temp-273.15)**2
+alfa_cladding = 1.2e-5
 
 
 ## Cladding density: ATTENZIONE usare Kelvin (see above) - output in kg/m^3
@@ -47,7 +47,6 @@ clad_thermal_cond = 13.95 + 0.01163*(temp-273.15)
 
 #### HELIUM PROPERTIES ####
 helium_thermal_cond = 15.8e-4 * temp**0.79
-
 
 
 #### FUEL PROPERTIES ####

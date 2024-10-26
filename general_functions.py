@@ -1,7 +1,6 @@
 import numpy as np
 import scipy as sp
 from numpy import array,sqrt,pi
-import matplotlib.pyplot as plt
 
 from material_properties import *
 from design_specifications import *
@@ -21,13 +20,10 @@ def equation_temp_solver(sy_funct, guess):
     return out.x[0]
 
 
-#### END OF GENERAL FUNCTIONS ####
 
-#### ******************************************************************** ####
+#### *********************************** POWER FUNCTIONS ********************************* ####
 
-#### POWER FUNCTIONS ####
-
-## LINEAR POWER DISTRIBUTION FUNCTIONS ##
+## LINEAR POWER DISTRIBUTION FUNCTIONS - INTERPOLATED ##
 def interpolated_power(z):
     unit = pin_top_pos / 10  #0.085
     peak_factor = array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498]) # ultimo ripetuto poicè si riferisce a z = 0.85
@@ -49,21 +45,25 @@ def integral_cosine_shape_power(z):
     return area[0]
 
 
-def power_lin_distribution(z):
+## LINEAR POWER DISTRIBUTION FUNCTIONS - STEP FUNCTIONS ##
+def power_lin_distribution(z,approx=True):
     unit = pin_top_pos / 10  #0.085
     peak_factor = array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498]) # ultimo ripetuto poicè si riferisce a z = 0.85
     discrete_power = peak_factor * power_lin_max
     value = int(z/unit)
     output = discrete_power[value]
-    return interpolated_power(z)  ## ! output
 
-def integral_power_lin_distr(z):
+    if approx == True:
+        return interpolated_power(z)
+    else:
+        return output
+
+def integral_power_lin_distr(z,approx=True):
     """
     Calculate integral, from bottom pos of pin (0) to z, of the power distribution function above!
     :return:  power of the pin up to z, in [W]
     """
     discrete_power = array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498])*power_lin_max
-    
     area = 0
     unit = pin_top_pos / 10  #0.085
     value = int(z/unit)
@@ -78,6 +78,7 @@ def integral_power_lin_distr(z):
             else: # otherwise give the area (power) of the steps
                 area += discrete_power[i]*unit
 
-    return integral_cosine_shape_power(z) ## ! area
-
-#### END OF POWER FUNCT ####
+    if approx == True:
+        return integral_cosine_shape_power(z)
+    else:
+        return area
