@@ -32,6 +32,7 @@ Nu_cool = 7 + 0.025*Pe_cool**0.8
 
 #### CLADDING ####
 clad_temp_melting = 1673 # K
+clad_temp_max = 650 + 273.15 # K
 
 ## Linear thermal expansion: ATTENZIONE usare Kelvin!
 clad_eps_th = -3.101e-4 + 1.525e-5*(temp-273.15) + 2.75e-9*(temp-273.15)**2
@@ -50,6 +51,7 @@ helium_thermal_cond = 15.8e-4 * temp**0.79
 
 
 #### FUEL PROPERTIES ####
+fuel_temp_max_suggested = 2600 + 273.15 # K
 
 # per adesso usare x = 2, Pu = 20%, por = 12%
 #thermal conductivity: kelvin...
@@ -58,12 +60,12 @@ B = 2.39e-4 + 1.37e-13 * pu_conc
 D = 5.27e9
 E = 17109.5
 k_0 = ( 1/(A + B*temp) + (D/(temp**2))*exp(-E/temp) )*(1-por)**2.5
-# da aggiungere burn up dopo! ( al posto di 1 --> hp conservativa???? )
-fuel_thermal_cond = 1.755 + (k_0 - 1.755)*1
+# da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
+fuel_thermal_cond = 1.755 + (k_0 - 1.755)*0
 
 # melting temp
-# da aggiungere burn up dopo! ( al posto di 1 --> hp conservativa???? )
-fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*1
+# da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
+fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*0
 
 #linear thermal ref fuel
 alfa_fuel = 1e-5 # @ 298.15 K

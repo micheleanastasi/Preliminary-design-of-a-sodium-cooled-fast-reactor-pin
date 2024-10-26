@@ -1,6 +1,6 @@
 
 #### DATA GUESS ####
-clad_thickness_0 = 0.5e-3 # m # HP NOT CHANGING!!!!!
+clad_thickness_0 = 0.3e-3 # m
 #clad_fuel_gap_0 = 80e-6 # m
 
 

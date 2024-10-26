@@ -1,14 +1,28 @@
-import numpy as np
+"""
+*** HOT GEOMETRY THERMAL ANALYSIS ***
+
+NOTE: still missing phenomena such as restructuring, burn-up and redistribution (the latter has minor impact though)
+    Nonetheless, up to this point everything was taken into account in a conservative approach, although some aspect should
+    be evaluated accordingly (i.e. how much is Pu redistr. negligible?)
+    But why conservative? Burn up -> inf, then lowering the values of T_fuel_melting, k_thermal, etc at minimum... moreover not still
+    considering restructuring!
+    THIS IS THE FIRST STEP
+
+SO:
+- start: only hot geometry, no burn up (we are HERE but cons.hp: burn up --> inf)
+- then: hot geo + restructuring + Pu redistribution
+- end: hot geo + "" + "" + burn up
+properties changing: k_fuel, Tm_fuel, ...
+"""
 import matplotlib.pyplot as plt
 import pandas as pd
-
-from design_specifications import clad_thickness_0, fuel_d_outer
 from thermal_functions import *
 
 
 #### ***************** DOMAIN DISCRETIZATION ********************** ####
-xx = np.linspace(pin_bottom_pos,pin_top_pos,50)
-rr = np.linspace(0,fuel_d_outer/2,50)
+resol = 5
+xx = np.linspace(pin_bottom_pos,pin_top_pos,resol)
+rr = np.linspace(0,fuel_d_outer/2,resol)
 
 
 
@@ -67,13 +81,19 @@ rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 
 test = 0
 
-for i in range(0,len(xx)):
-    yy_power_linear[i] = power_lin_distribution(xx[i])
-    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i],yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_iteration(xx[i],clad_d_outer,fuel_d_outer,clad_thickness_0)
-    for j in range(0,len(rr)):
-        rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out,fuel_diam_outer,clad_thickness_0)
-        test += 1
-        print(f"Calcs completed at {np.round(100*test/(len(xx)*len(rr)),3)} %")
+# exploit stuff here to evaluate thickness...
+clad_range = np.arange(0.1e-3,1e-3,0.1e-3)
+for clad_thickness_0 in clad_range:
+    for i in range(0,len(xx)):
+        yy_power_linear[i] = power_lin_distribution(xx[i])
+        yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i],yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_iteration(xx[i],clad_d_outer,fuel_d_outer,clad_thickness_0)
+        for j in range(0,len(rr)):
+            rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out,fuel_diam_outer,clad_thickness_0)
+            test += 1
+            #print(f"Calcs completed at {np.round(100*test/(len(xx)*len(rr)),3)} %")
+    print( f"Cladding thickness: {clad_thickness_0*1000} mm" )
+    print( f"Max temp: {np.max(yy_hot_temp)} K" )
+    print( f"Gap: {np.min(yy_gap)*1000} mm\n" )
 
 
 
@@ -106,6 +126,7 @@ plt.plot(xx,yy_cold_temp[:,2], label='COLD Cladding internal',color='orange', li
 plt.plot(xx,yy_hot_temp[:,0], label='Coolant',color='blue')
 plt.plot(xx,yy_hot_temp[:,1], label='HOT Cladding external',color='red')
 plt.plot(xx,yy_hot_temp[:,2], label='HOT Cladding internal',color='orange')
+plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp', color='black', linestyle='--')
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Axial temp profile of coolant and cladding (inner and outer)")
@@ -119,6 +140,8 @@ plt.plot(xx,yy_cold_temp[:,3], label='COLD Fuel external',color='blue', linestyl
 plt.plot(xx,yy_cold_temp[:,4], label='COLD Fuel internal',color='red', linestyle='--')
 plt.plot(xx,yy_hot_temp[:,3], label='HOT Fuel external',color='blue')
 plt.plot(xx,yy_hot_temp[:,4], label='HOT Fuel internal',color='red')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='black', linestyle='--')
+plt.plot(xx,np.ones(len(xx))*2964.92, label='Melting point of fuel (HP CONS))', color='black', linestyle='--')
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Axial temp profile of fuel pellet (inner and outer)")
@@ -153,7 +176,8 @@ plt.show()
 #### ***************** PLOT TEMPERATURES (RADIAL) ******************* ####
 
 plt.figure()
-plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:])
+plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:], label="Temp profile")
+plt.plot(rr,np.ones(len(rr))*fuel_temp_max_suggested, label="Max suggested fuel temp", color='black', linestyle='--')
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Middle position of pin, fuel pellet temperature profile")
@@ -176,7 +200,8 @@ plt.show()
 before_gap = ( clad_d_outer - 2*clad_thickness_0 - fuel_d_outer )/2
 plt.figure()
 plt.plot(xx,yy_gap, label='Gap @ hot geometry')
-plt.plot(xx,np.ones_like(xx)*before_gap, label='Gap @ cold geometry', linestyle='--')
+plt.plot(xx,np.ones_like(xx)*before_gap, label='Gap @ cold geometry', linestyle='--', color='black')
+plt.plot(xx,np.zeros_like(xx), label='Gap @ cold geometry', linestyle='--', color='black')
 plt.xlabel("Position [m]")
 plt.ylabel("Gap [m]")
 plt.title("GAP along the pin, BOTH GEOMETRIES")
@@ -184,10 +209,10 @@ plt.grid()
 plt.show()
 
 # velocity of coolant along pin
-max_vel = 8 #m/s
+max_vel = 8 # m/s
 plt.figure()
 plt.plot(xx,yy_properties[:,5], label='Velocity')
-plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--')
+plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
 plt.xlabel("Position [m]")
 plt.ylabel("Velocity [m/s]")
 plt.title("Average velocity (over the z section), HOT GEOMETRY")

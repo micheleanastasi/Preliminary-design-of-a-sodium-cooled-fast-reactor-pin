@@ -2,13 +2,13 @@ from general_functions import *
 from material_properties import *
 from design_specifications import *
 
-
+"""
 #### NOTE ####
 #
 # c'è ancora da considerare burn up effects
-# anche fission gases
+# anche fission gases --> K_gas
 #
-##
+"""
 
 
 #### *********** TEMP PROFILE OF COOLANT ALONG Z AXIS ************ ####
