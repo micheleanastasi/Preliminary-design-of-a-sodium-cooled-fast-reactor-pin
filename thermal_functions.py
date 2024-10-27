@@ -114,6 +114,8 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
 #
 # NB variazione diam ext del fuel (hot geometry)
 # NB considerare pure variazione composizione gas??
+#
+# NOTE: CONTACT HEAT EXCHANGE NOT IMPLEMENTED, NEITHER RADIATIVE ONE!
 ##
 def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
     """
@@ -136,7 +138,7 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
     if delta_gap >= 0:
         out = equation_temp_solver(res, temp_fuel_outer_guess)
     else:
-        out = 0
+        out = temp_clad_in  # no contact implemented
     return out, delta_gap
 
 

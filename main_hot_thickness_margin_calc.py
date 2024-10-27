@@ -82,7 +82,7 @@ yy_gap = np.zeros([len(xx),1])
 yy_properties = np.zeros([len(xx),11])
 rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 
-clad_range = np.arange(0.45e-3,0.6e-3,0.005e-3)
+clad_range = np.arange(0.505e-3,0.570e-3,0.005e-3)
 clad_th = np.zeros_like(clad_range)
 temp_max = np.zeros_like(clad_range)
 margin_fuel = np.zeros_like(clad_range)
@@ -110,7 +110,7 @@ for clad_thickness_0 in clad_range:
 
 plt.figure()
 plt.plot(clad_th,temp_max,label='Max fuel temp')
-plt.xlim([0.44,0.61])
+plt.xlim([0.50,0.57])
 plt.plot(xx, np.ones(len(xx)) * 2964.92, color='black', linestyle='--', label = 'Melting temp (CONS)') # tmelt provvisoria
 plt.plot(xx, np.ones(len(xx)) * fuel_temp_max_suggested, color='black', linestyle='--', label = 'Max suggested temp') # tmelt provvisoria
 plt.title("Max fuel temp acc. to clad thickness")
