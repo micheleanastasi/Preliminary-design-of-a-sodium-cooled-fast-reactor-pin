@@ -162,6 +162,7 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th):
     k_fuel = k_fuel.subs(pu_conc,0.2)
     k_fuel = k_fuel.subs(por,0.12)
 
+    ### NB! MODIFICARE QUI PER RISPETTARE EQUAZIONE!!!! SAI COSA
     eqz_1 = temp - temp_fuel_out
     eqz_2 = power_lin_distribution(z) / (4*pi*k_fuel)
     res = eqz_1 - eqz_2
