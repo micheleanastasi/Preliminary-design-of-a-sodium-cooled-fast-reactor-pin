@@ -20,7 +20,7 @@ from thermal_functions import *
 
 
 #### ***************** DOMAIN DISCRETIZATION ********************** ####
-resol = 5
+resol = 20
 xx = np.linspace(pin_bottom_pos,pin_top_pos,resol)
 rr = np.linspace(0,fuel_d_outer/2,resol)
 
@@ -64,7 +64,7 @@ def hot_geometry_iteration(z,clad_d_out_0,fuel_d_out_0,clad_thick_0):
         if np.abs(prec_temp_array[4] - temp_array[4] ) < tol : # va bene così (?)
             break
 
-    #print(f"Hot geo completed at {np.round(100*z/0.85,2)}% (Position: {np.round(z,2)} m) - Temp fuel inner: HOT:{np.round(temp_array[4],2)}, COLD:{np.round(old[4],2)} - Gap:{np.round(delta_gap*1000,6)} mm")
+    print(f"Hot geo completed at {np.round(100*z/0.85,2)}% (Position: {np.round(z,2)} m) - Temp fuel inner: HOT:{np.round(temp_array[4],2)}, COLD:{np.round(old[4],2)} - Gap:{np.round(delta_gap*1000,6)} mm")
     other = np.array( list([yy_htc_loc]) + list(yy_adim_num_cool) + list(yy_cool_loc_prop) )
     return old,temp_array,delta_gap,other, clad_d_out_0, fuel_d_out_0
 
@@ -214,4 +214,4 @@ def plotting():
     plt.show()
     return None
 
-#plotting()
+plotting()

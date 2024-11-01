@@ -15,7 +15,7 @@ def equation_temp_solver(sy_funct, guess):
     :return:
     """
     res = (sy_funct)**2
-    res_l = sy.lambdify(temp,res)
+    res_l = sy.lambdify(temp,res) # conversione sympy --> def python
     out = sp.optimize.minimize((res_l),guess,tol=10e-3)
     return out.x[0]
 
