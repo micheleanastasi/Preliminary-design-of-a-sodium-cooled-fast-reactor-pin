@@ -64,7 +64,7 @@ def hot_geometry_iteration(z,clad_d_out_0,fuel_d_out_0,clad_thick_0):
         if np.abs(prec_temp_array[4] - temp_array[4] ) < tol : # va bene così (?)
             break
 
-    print(f"Hot geo completed at {np.round(100*z/0.85,2)}% (Position: {np.round(z,2)} m) - Temp fuel inner: HOT:{np.round(temp_array[4],2)}, COLD:{np.round(old[4],2)} - Gap:{np.round(delta_gap*1000,6)} mm")
+    print(f"Hot geo completed at {np.round(100*z/0.85,2)}% (Position: {np.round(z,2)} m) - Temp fuel inner: HOT:{np.round(temp_array[4],2)}, COLD:{np.round(old[4],2)} - Gap:{delta_gap*1000} mm")
     other = np.array( list([yy_htc_loc]) + list(yy_adim_num_cool) + list(yy_cool_loc_prop) )
     return old,temp_array,delta_gap,other, clad_d_out_0, fuel_d_out_0
 
@@ -111,7 +111,7 @@ def plotting():
     #### ***************** PLOT TEMPERATURES (AXIAL) ******************* ####
     ## NB no redistr, no restructuring, no burn up...
 
-    # plot coolant, cladding in and out temp for hot and cold geometrie
+    # plot coolant, cladding in and out temp for hot and cold geometries
     plt.figure()
     #plt.plot(xx,yy_cold_temp[:,0], label='COLD Coolant',color='blue', linestyle='--')
     plt.plot(xx,yy_cold_temp[:,1], label='COLD Cladding external',color='red', linestyle='--')
@@ -197,7 +197,7 @@ def plotting():
     plt.plot(xx,np.zeros_like(xx), label='Gap @ cold geometry', linestyle='--', color='black')
     plt.xlabel("Position [m]")
     plt.ylabel("Gap [m]")
-    plt.title("GAP along the pin, BOTH GEOMETRIES")
+    plt.title("GAP along the pin")
     plt.grid()
     plt.show()
 

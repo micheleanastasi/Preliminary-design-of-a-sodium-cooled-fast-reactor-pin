@@ -1,10 +1,12 @@
-
+"""
+Design specification deriving from homework.pdf data
+"""
 #### DATA GUESS ####
-clad_thickness_0 = 0.54e-3 # m
-#clad_fuel_gap_0 = 80e-6 # m
+clad_thickness_0 = 0.54e-3 # m - first guess
 
 
-#### THERMO HYDRAULICS ####
+
+#### ************ THERMO HYDRAULICS ************* ####
 cool_temp_inlet = 395 + 273.15 # K
 cool_mass_flow = 0.049 # kg/s
 cool_press_inlet = 0.1e6 # Pa
@@ -12,7 +14,8 @@ f_pitch = 0.5 # volume control is a triangle
 pin_pitch = 8.275e-3 # m
 
 
-#### FUEL PIN SPECIFICATIONS
+
+#### ***************** FUEL PIN SPECIFICATIONS ******************* ####
 temp_in = 293.15 # K
 
 pin_bottom_pos = 0  # m
@@ -28,5 +31,5 @@ fill_gas_temp_in = 293.15 # K - initial temperature
 
 
 
-#### POWER DISTRIBUTION
+#### ************** POWER DISTRIBUTION ************* ####
 power_lin_max = 38700 # W/m - linear power @ peak factor node (@ 0.3825 m over the bottom)

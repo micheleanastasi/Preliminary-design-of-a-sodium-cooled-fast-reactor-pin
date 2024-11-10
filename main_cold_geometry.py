@@ -1,11 +1,11 @@
-import numpy as np
+
 import pandas as pd
 from thermal_functions import *
 import matplotlib.pyplot as plt
 
 #### ******************** DATA ARRAY INITIALIZATION ************************* ####
-xx = np.linspace(pin_bottom_pos,pin_top_pos,10)
-rr = np.linspace(0,fuel_d_outer/2,10)
+xx = np.linspace(pin_bottom_pos,pin_top_pos,100)
+rr = np.linspace(0,fuel_d_outer/2,1)
 
 yy_power_linear = np.zeros_like(xx)
 yy_htc_local = np.zeros_like(xx)
@@ -95,7 +95,6 @@ plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:])
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Cold geometry, middle position (pin) fuel pellet temperature")
-plt.legend()
 plt.grid()
 plt.show()
 

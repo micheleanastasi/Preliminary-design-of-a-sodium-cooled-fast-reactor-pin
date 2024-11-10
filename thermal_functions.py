@@ -1,27 +1,27 @@
+"""
+#### NOTE ####
+c'è ancora da considerare burn up effects
+anche fission gases --> K_gas
+"""
+from numpy import pi, sqrt
 from general_functions import *
 from material_properties import *
 from design_specifications import *
 
-"""
-#### NOTE ####
-#
-# c'è ancora da considerare burn up effects
-# anche fission gases --> K_gas
-#
-"""
 
+#### ************************* TEMP PROFILE OF COOLANT ALONG Z AXIS ************************ ####
 
-#### *********** TEMP PROFILE OF COOLANT ALONG Z AXIS ************ ####
-#
-# energy balance: f*int(Cp(T), Tin, T) - int(q', bottom_pin, z) / mass_flow = 0 ... Tout is our goal.
-#
-## occorre metodo che minimizzi la funzione res affinche si trovi una temperatura che rispetti il bilancio energetico, in quanto Cp stesso dipende da temperatura!!
 def temp_coolant(z):
     """
+    Metodo che minimizzi la funzione res affinche si trovi una temperatura che rispetti il bilancio energetico,
+    in quanto Cp stesso dipende da temperatura!
+
     :param z: position choice
     :return: Temp of coolant at point T
     """
     T_0 = 800 + 273.15 # K
+
+    # energy balance: f*int(Cp(T), Tin, T) - int(q', bottom_pin, z) / mass_flow = 0 ... Tout is our goal
     eqz_2 = f_pitch*integral_power_lin_distr(z) / cool_mass_flow  # valore num seconda parte eqz !! NB F PITCH=1/2 !!
     eqz_1 = sy.integrate(cool_spec_heat,temp)
     res = eqz_1 - eqz_1.subs(temp,cool_temp_inlet) - eqz_2 # primo è integtale, secondo intehrale con sostituzione (quindi risolto) e terzo eqz_2
@@ -30,18 +30,24 @@ def temp_coolant(z):
     return T_coolant_at_z
 
 
+
+#### ********************* TEMP PROFILE OF CLADDING (OUTER) ALONG Z AXIS ********************* ####
+
 ## CORRELATION FUNCTIONS
-#
+
 # Calculated for each temperature of the coolant along z axis
 # HP: pitch btw pins constant, no cross-section of flows!!
-#
-#* {NB: possibile "dubbio" su htc, occorre verifica h e Pr}
+
 def heat_transfer_coeff_local(temperature,clad_diam_out):
     """
-    Get parameters of coolant such as heat transfer coeff., adim. numbers and avg_velocity: point by point, according to temperature and clad diameter!
+    Get parameters of coolant such as htc, adim. numbers and avg_velocity: point by point, according to temperature and clad diameter.
+
+    HYPOTHESIS:
+        - pitch btw pins constant, no cross-section of flows!!
+
     :param clad_diam_out: in m - Varying parameter! (hot geometry)
     :param temperature: in [K]
-    :return: htc, array with adim. numbers and array with some coolant/geometry properties calculated here
+    :return: htc; array with adim. numbers; array with some coolant/geometry properties calculated here
     """
     # parameters that are going to be useful below...
     temp_fahr = (temperature - 273.15) * 9 / 5 + 32 # conversione kelvin to fahrenheit
@@ -63,12 +69,9 @@ def heat_transfer_coeff_local(temperature,clad_diam_out):
     h = Nu*th_cond/hydr_diameter
     output_numbers = array([Re,Pr,Pe,Nu])
     properties = np.array([avg_velocity,net_area,density,dyn_viscosity,spec_heat,th_cond])
-    return h, output_numbers,properties
+    return h, output_numbers, properties
 
 
-#### ***************** TEMP PROFILE OF CLADDING (OUTER) ALONG Z AXIS ***************** ####
-#
-## un giorno modifica pure cladding outer diam (th exp)
 def temp_cladding_outer(z,clad_d_out):
     """
     :param z: in m
@@ -201,8 +204,11 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th):
 
 
 #### ********************************** HOT GEOMETRY FUNCTION **************************************** ####
+
 def diameter_th_exp_cladding(diam,temperature):
-    return diam + diam * alfa_cladding * (temperature - temp_in) ### RIVEDI QUESTA ROBA CHE FORSE MANCA IL DATO!
+    clad_exp = clad_eps_th.subs(temp,temperature)
+   # return diam + diam * alfa_cladding * (temperature - temp_in)
+    return diam + clad_exp*diam
 
 def diameter_th_exp_fuel(diam,temperature):
     return diam + diam * alfa_fuel * (temperature - temp_in)
