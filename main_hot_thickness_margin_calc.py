@@ -14,7 +14,7 @@ SO:
 - end: hot geo + "" + "" + burn up
 properties changing: k_fuel, Tm_fuel, ...
 
-NB CONTACT HEAT TRANSFER BTW FUEL AND CLADDING NOT CONSIDERED
+NB CONTACT HEAT TRANSFER BTW FUEL AND CLADDING NOT CONSIDERED AS THERE MUST BE ALWAYS SPACE AT THIS STAGE!
 """
 
 import numpy as np
@@ -23,13 +23,14 @@ from thermal_functions import *
 
 
 #### ***************** DOMAIN DISCRETIZATION ********************** ####
-resol = 15
+resol = 20
 xx = np.linspace(pin_bottom_pos,pin_top_pos,resol)
 rr = np.linspace(0,fuel_d_outer/2,resol)
 
 
 
 #### *************************** HOT GEOMETRY CALCULATIONS ************************** ####
+
 def hot_geometry_iteration(z,clad_d_out_0,fuel_d_out_0,clad_thick_0):
     tol = 10e-3
 
@@ -42,7 +43,7 @@ def hot_geometry_iteration(z,clad_d_out_0,fuel_d_out_0,clad_thick_0):
 
     temp_array[0] = temp_coolant(z)
     temp_array[1] = temp_cladding_outer(z, clad_d_out_0)
-    yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coeff_local(temp_array[0],clad_d_out_0) # new
+    yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coefficient(temp_array[0], clad_d_out_0)  # new
     temp_array[2] = temp_cladding_inner(z, clad_d_out_0, delta_gap)
     temp_array[3],_ = temp_fuel_outer(z, clad_d_out_0, fuel_d_out_0, clad_thickness_0)
     temp_array[4] = temp_fuel_inner(z, clad_d_out_0, fuel_d_out_0, clad_thickness_0)
@@ -59,7 +60,7 @@ def hot_geometry_iteration(z,clad_d_out_0,fuel_d_out_0,clad_thick_0):
 
         temp_array[0] = temp_coolant(z)
         temp_array[1] = temp_cladding_outer(z, clad_d_out_0)
-        yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coeff_local(temp_array[0],clad_d_out_0)  # new
+        yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coefficient(temp_array[0], clad_d_out_0)  # new
         temp_array[2] = temp_cladding_inner(z, clad_d_out_0, delta_gap)
         temp_array[3],delta_gap = temp_fuel_outer(z, clad_d_out_0, fuel_d_out_0, clad_thickness_0)
         temp_array[4] = temp_fuel_inner(z, clad_d_out_0, fuel_d_out_0, clad_thickness_0)
@@ -82,7 +83,7 @@ yy_gap = np.zeros([len(xx),1])
 yy_properties = np.zeros([len(xx),11])
 rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 
-clad_range = np.arange(0.505e-3,0.570e-3,0.005e-3)
+clad_range = np.arange(0.505e-3,0.560e-3,0.005e-3)
 clad_th = np.zeros_like(clad_range)
 temp_max = np.zeros_like(clad_range)
 margin_fuel = np.zeros_like(clad_range)
