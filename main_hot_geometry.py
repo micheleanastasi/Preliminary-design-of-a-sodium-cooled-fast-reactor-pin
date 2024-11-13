@@ -19,12 +19,8 @@ import pandas as pd
 from thermal_functions import *
 
 
-#### *************************** HOT GEOMETRY CALCULATIONS ************************** ####
 
-
-
-
-#### ***************** DOMAIN DISCRETIZATION ********************** ####
+#### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 xx = np.linspace(pin_bottom_pos,pin_top_pos,20)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
@@ -36,19 +32,19 @@ rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 
 
 
-#### *********************** CALCS *********************** ####
+#### **************************************************** CALCS *************************************************** ####
 test = 0
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
-    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i],yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_iteration(xx[i],clad_d_outer,fuel_d_outer,clad_thickness_0)
+    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out, fuel_diam_outer = hot_geometry_iteration(
+        xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0)
     for j in range(0,len(rr)):  # radius
         rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out,fuel_diam_outer,clad_thickness_0)
         test += 1
 
 
 
-#### ********************** EXCEL PRINT ********************* ####
-
+#### ************************************************* EXCEL PRINT ************************************************ ####
 data_hotGeo_tempZ_old = np.array([xx, yy_power_linear,
                                     yy_cold_temp[:,0],yy_cold_temp[:,1],yy_cold_temp[:,2],yy_cold_temp[:,3],yy_cold_temp[:,4]]).T
 titles_power_old = ['Position in [m]', 'Linear power [W/m]',
@@ -71,111 +67,108 @@ df_power = pd.DataFrame(data_hotGeo_tempZ_new, columns=titles_power_new)
 df_power.to_excel("data_hotGeo_alongZ_new.xlsx",index=False)
 
 
-def plotting():
-    #### ***************** PLOT TEMPERATURES (AXIAL) ******************* ####
-    ## NB no redistr, no restructuring, no burn up...
 
-    # plot coolant, cladding in and out temp for hot and cold geometries
-    plt.figure()
-    #plt.plot(xx,yy_cold_temp[:,0], label='COLD Coolant',color='blue', linestyle='--')
-    plt.plot(xx,yy_cold_temp[:,1], label='COLD Cladding external',color='red', linestyle='--')
-    plt.plot(xx,yy_cold_temp[:,2], label='COLD Cladding internal',color='orange', linestyle='--')
-    plt.plot(xx,yy_hot_temp[:,0], label='Coolant',color='blue')
-    plt.plot(xx,yy_hot_temp[:,1], label='HOT Cladding external',color='red')
-    plt.plot(xx,yy_hot_temp[:,2], label='HOT Cladding internal',color='orange')
-    plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp', color='black', linestyle='--')
-    plt.xlabel("Position in [m]")
-    plt.ylabel("Temperature in [K]")
-    plt.title("Axial temp profile of coolant and cladding (inner and outer)")
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-    # plot fuel internal and external for cold and hot geometries
-    plt.figure()
-    plt.plot(xx,yy_cold_temp[:,3], label='COLD Fuel external',color='blue', linestyle='--')
-    plt.plot(xx,yy_cold_temp[:,4], label='COLD Fuel internal',color='red', linestyle='--')
-    plt.plot(xx,yy_hot_temp[:,3], label='HOT Fuel external',color='blue')
-    plt.plot(xx,yy_hot_temp[:,4], label='HOT Fuel internal',color='red')
-    plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='black', linestyle='--')
-    plt.plot(xx,np.ones(len(xx))*2964.92, label='Melting point of fuel (HP CONS))', color='black', linestyle='--')
-    plt.xlabel("Position in [m]")
-    plt.ylabel("Temperature in [K]")
-    plt.title("Axial temp profile of fuel pellet (inner and outer)")
-    plt.legend()
-    plt.grid()
-    plt.show()
+#### ************************************************* PLOTTING *************************************************** ####
 
 
-    # plot difference btw fuel hot and cold...
-    plt.figure()
-    plt.plot(xx,yy_cold_temp[:,3] - yy_hot_temp[:,3], label='Fuel external',color='blue')
-    plt.plot(xx,yy_cold_temp[:,4] - yy_hot_temp[:,4], label='Fuel internal',color='red')
-    plt.xlabel("Position in [m]")
-    plt.ylabel("Delta temperature in [K]")
-    plt.title("Axial delta temp profile of fuel pellet (inner and outer) btw COLD and HOT")
-    plt.legend()
-    plt.grid()
-    plt.show()
+#### ***************** PLOT TEMPERATURES (AXIAL) ******************* ####
+# NB no redistr, no restructuring, no burn up...
 
-    # plot difference btw cladding hot and cold...
-    plt.figure()
-    plt.plot(xx,yy_cold_temp[:,1] - yy_hot_temp[:,1], label='Cladding external',color='red')
-    plt.plot(xx,yy_cold_temp[:,2] - yy_hot_temp[:,2], label='Cladding internal',color='orange')
-    plt.xlabel("Position in [m]")
-    plt.ylabel("Delta temperature in [K]")
-    plt.title("Axial delta temp profile of cladding (inner and outer) btw COLD and HOT")
-    plt.legend()
-    plt.grid()
-    plt.show()
+## plot coolant, cladding in and out temp for hot and cold geometries
+plt.figure()
+plt.plot(xx,yy_cold_temp[:,1], label='COLD Cladding external',color='red', linestyle='--')
+plt.plot(xx,yy_cold_temp[:,2], label='COLD Cladding internal',color='orange', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,0], label='Coolant',color='blue')
+plt.plot(xx,yy_hot_temp[:,1], label='HOT Cladding external',color='red')
+plt.plot(xx,yy_hot_temp[:,2], label='HOT Cladding internal',color='orange')
+plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp', color='black', linestyle='--')
+plt.xlabel("Position in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Axial temp profile of coolant and cladding (inner and outer)")
+plt.legend()
+plt.grid()
+plt.show()
+
+## plot fuel internal and external for cold and hot geometries
+plt.figure()
+plt.plot(xx,yy_cold_temp[:,3], label='COLD Fuel external',color='blue', linestyle='--')
+plt.plot(xx,yy_cold_temp[:,4], label='COLD Fuel internal',color='red', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,3], label='HOT Fuel external',color='blue')
+plt.plot(xx,yy_hot_temp[:,4], label='HOT Fuel internal',color='red')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='black', linestyle='--')
+plt.plot(xx,np.ones(len(xx))*2964.92, label='Melting point of fuel (HP CONS))', color='black', linestyle='--')
+plt.xlabel("Position in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Axial temp profile of fuel pellet (inner and outer)")
+plt.legend()
+plt.grid()
+plt.show()
+
+## plot difference btw fuel hot and cold...
+plt.figure()
+plt.plot(xx,yy_cold_temp[:,3] - yy_hot_temp[:,3], label='Fuel external',color='blue')
+plt.plot(xx,yy_cold_temp[:,4] - yy_hot_temp[:,4], label='Fuel internal',color='red')
+plt.xlabel("Position in [m]")
+plt.ylabel("Delta temperature in [K]")
+plt.title("Axial delta temp profile of fuel pellet (inner and outer) btw COLD and HOT")
+plt.legend()
+plt.grid()
+plt.show()
+
+## plot difference btw cladding hot and cold...
+plt.figure()
+plt.plot(xx,yy_cold_temp[:,1] - yy_hot_temp[:,1], label='Cladding external',color='red')
+plt.plot(xx,yy_cold_temp[:,2] - yy_hot_temp[:,2], label='Cladding internal',color='orange')
+plt.xlabel("Position in [m]")
+plt.ylabel("Delta temperature in [K]")
+plt.title("Axial delta temp profile of cladding (inner and outer) btw COLD and HOT")
+plt.legend()
+plt.grid()
+plt.show()
 
 
-    #### ***************** PLOT TEMPERATURES (RADIAL) ******************* ####
+#### ***************** PLOT TEMPERATURES (RADIAL) ******************* ####
+plt.figure()
+plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:], label="Temp profile")
+plt.plot(rr,np.ones(len(rr))*fuel_temp_max_suggested, label="Max suggested fuel temp", color='black', linestyle='--')
+plt.xlabel("Position in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Middle position of pin, fuel pellet temperature profile")
+plt.grid()
+plt.show()
 
-    plt.figure()
-    plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:], label="Temp profile")
-    plt.plot(rr,np.ones(len(rr))*fuel_temp_max_suggested, label="Max suggested fuel temp", color='black', linestyle='--')
-    plt.xlabel("Position in [m]")
-    plt.ylabel("Temperature in [K]")
-    plt.title("Middle position of pin, fuel pellet temperature profile")
-    plt.grid()
-    plt.show()
-
-    # plot 3d temp radial profile of fuel
-    x,y = np.meshgrid(rr,xx)
-    fig_1 = plt.figure()
-    ax = fig_1.add_subplot(111, projection='3d')
-    ax.plot_surface(x,y,rr_temp_fuel_radial,cmap='viridis')
-    ax.set_ylabel('Position along the pin [m]')
-    ax.set_xlabel('Radius [m]')
-    ax.set_zlabel('Temperature [K]')
-    plt.show()
+## plot 3d temp radial profile of fuel
+x,y = np.meshgrid(rr,xx)
+fig_1 = plt.figure()
+ax = fig_1.add_subplot(111, projection='3d')
+ax.plot_surface(x,y,rr_temp_fuel_radial,cmap='viridis')
+ax.set_ylabel('Position along the pin [m]')
+ax.set_xlabel('Radius [m]')
+ax.set_zlabel('Temperature [K]')
+plt.show()
 
 
-    #### ***************** OTHER PROPERTIES (AXIAL) ******************* ####
-    # GAP
-    before_gap = ( clad_d_outer - 2*clad_thickness_0 - fuel_d_outer )/2
-    plt.figure()
-    plt.plot(xx,yy_gap, label='Gap @ hot geometry')
-    plt.plot(xx,np.ones_like(xx)*before_gap, label='Gap @ cold geometry', linestyle='--', color='black')
-    plt.plot(xx,np.zeros_like(xx), label='Gap @ cold geometry', linestyle='--', color='black')
-    plt.xlabel("Position [m]")
-    plt.ylabel("Gap [m]")
-    plt.title("GAP along the pin")
-    plt.grid()
-    plt.show()
+#### ***************** OTHER PROPERTIES (AXIAL) ******************* ####
+## GAP
+before_gap = ( clad_d_outer - 2*clad_thickness_0 - fuel_d_outer )/2
+plt.figure()
+plt.plot(xx,yy_gap, label='Gap @ hot geometry')
+plt.plot(xx,np.ones_like(xx)*before_gap, label='Gap @ cold geometry', linestyle='--', color='black')
+plt.plot(xx,np.zeros_like(xx), label='Gap @ cold geometry', linestyle='--', color='black')
+plt.xlabel("Position [m]")
+plt.ylabel("Gap [m]")
+plt.title("GAP along the pin")
+plt.grid()
+plt.show()
 
-    # velocity of coolant along pin
-    max_vel = 8 # m/s
-    plt.figure()
-    plt.plot(xx,yy_properties[:,5], label='Velocity')
-    plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
-    plt.xlabel("Position [m]")
-    plt.ylabel("Velocity [m/s]")
-    plt.title("Average velocity (over the z section), HOT GEOMETRY")
-    plt.legend()
-    plt.grid()
-    plt.show()
-    return None
-
-plotting()
+## velocity of coolant along pin
+max_vel = 8 # m/s
+plt.figure()
+plt.plot(xx,yy_properties[:,5], label='Velocity')
+plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
+plt.xlabel("Position [m]")
+plt.ylabel("Velocity [m/s]")
+plt.title("Average velocity (over the z section), HOT GEOMETRY")
+plt.legend()
+plt.grid()
+plt.show()

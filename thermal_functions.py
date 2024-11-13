@@ -2,6 +2,7 @@
 #### NOTE ####
 c'è ancora da considerare burn up effects
 anche fission gases --> K_gas
+anche restructuring
 """
 from numpy import pi, sqrt
 from sympy.physics.units import temperature
@@ -69,7 +70,6 @@ def heat_transfer_coefficient(temperature,clad_diam_out):
     Nu = Nu_cool.subs(Pe_cool,Pe)
 
     h = Nu*th_cond/hydr_diameter
-
     adim_numbers = array([Re, Pr, Pe, Nu])
     properties = np.array([avg_velocity, net_area, density, dyn_viscosity, spec_heat, th_cond])
     return h, adim_numbers, properties
@@ -208,7 +208,7 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th):
 
 
 
-#### ********************************** DIAMETER - HOT GEOMETRY FUNCTION **************************************** ####
+#### ********************************** DIAMETER - HOT GEOMETRY FUNCTION ***************************************** ####
 
 def diameter_th_exp_cladding(diam,temperature):
     clad_exp = clad_eps_th.subs(temp,temperature)
@@ -221,50 +221,48 @@ def diameter_th_exp_fuel(diam,temperature):
 
 
 #### ********************************** ITERATION - HOT GEOMETRY FUNCTION **************************************** ####
-def hot_geometry_iteration(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_data=True):
+def hot_geometry_iteration(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_status=True):
     """
-    :param z:
-    :param clad_d_out_0:
-    :param fuel_d_out_0:
-    :param clad_thick_0:
-    :return:
+    Iterative calculation in order to get temperatures, gap, final fuel out and clad out diameters, other properties
+    (such as htc, net area, adim. numbers and so on...) in a hot geometry model
+    :param z: in m
+    :param clad_d_out_0: cold geo diameter, in m
+    :param fuel_d_out_0: cold geo diameter, in m
+    :param clad_thick_0: supposed cladding thickness to be used, in m
+    :return: cold temp, hot temp, minimun gap along the pin, generic properties @ hot geo, final clad outer diam, final fuel outer diam
     """
     tol = 10e-3
-    temp_array = np.zeros(5)
+    temp_array = np.zeros(5) # 0: temp coolant - 1: temp clad out - 2: temp clad in - 3: temp fuel out - 4: temp fuel in
 
-    # initialize variables
-    delta_gap = (clad_d_out_0 - 2 * clad_thick_0 - fuel_d_out_0) / 2
-    # yy_htc_loc = np.zeros([1])
-    # yy_adim_num_cool = np.zeros([4])
-    # yy_cool_loc_prop = np.zeros([6])
-
+    # cold geometry computing - to be used as first iteration data
     temp_array[0] = temp_coolant(z)
     temp_array[1] = temp_cladding_outer(z, clad_d_out_0)
-    # yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coefficient(temp_array[0], clad_d_out_0)  # new
     temp_array[2] = temp_cladding_inner(z, clad_d_out_0, clad_thick_0)
-    temp_array[3], _ = temp_fuel_outer(z, clad_d_out_0, fuel_d_out_0, clad_thick_0)
+    temp_array[3],_ = temp_fuel_outer(z, clad_d_out_0, fuel_d_out_0, clad_thick_0)
     temp_array[4] = temp_fuel_inner(z, clad_d_out_0, fuel_d_out_0, clad_thick_0)
-    old_temp = temp_array.copy()
+    old_temp = temp_array.copy() # to give as output the cold geo temps too
 
     while True:
-        prec_temp_array = temp_array.copy()
+        prec_temp_array = temp_array.copy() # to be used to evaluate when exiting from the while below...
 
         # considerare sempre espansione rispetto al diametro INIZIALE
         clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, prec_temp_array[1])  # with temp clad outer
         fuel_d_out_0 = diameter_th_exp_fuel(fuel_d_outer, prec_temp_array[3])  # with temp fuel outer
 
+        # hot geo computing
         temp_array[0] = temp_coolant(z)
         temp_array[1] = temp_cladding_outer(z, clad_d_out_0)
         yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coefficient(temp_array[0], clad_d_out_0)  # new
         temp_array[2] = temp_cladding_inner(z, clad_d_out_0, clad_thick_0)
-        temp_array[3], delta_gap = temp_fuel_outer(z, clad_d_out_0, fuel_d_out_0, clad_thickness_0)
-        temp_array[4] = temp_fuel_inner(z, clad_d_out_0, fuel_d_out_0, clad_thickness_0)
+        temp_array[3], delta_gap = temp_fuel_outer(z, clad_d_out_0, fuel_d_out_0, clad_thick_0)
+        temp_array[4] = temp_fuel_inner(z, clad_d_out_0, fuel_d_out_0, clad_thick_0)
 
         if np.abs(prec_temp_array[4] - temp_array[4]) < tol:  # va bene così (?)
             break
     other = np.array(list([yy_htc_loc]) + list(yy_adim_num_cool) + list(yy_cool_loc_prop))
-    if print_data:
+
+    if print_status: # optional "progress bar" print (see input boolean)
         print(f"Hot geo completed at {np.round(100 * z / 0.85, 2)}% (Position: {np.round(z, 2)} m) - Temp fuel "
-              f"inner: HOT:{np.round(temp_array[4], 2)} K, COLD:{np.round(old_temp[4], 2)} K - Gap:{np.round(delta_gap * 1e6,3)} um")
+              f"inner: HOT:{np.round(temp_array[4], 2)} K, COLD:{np.round(old_temp[4], 2)} K - Min. gap:{np.round(delta_gap * 1e6,3)} um")
 
     return old_temp, temp_array, delta_gap, other, clad_d_out_0, fuel_d_out_0

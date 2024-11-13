@@ -1,17 +1,19 @@
 """
 *** COLD GEOMETRY ANALYSIS ***
 
-NOTE: this approach is the most conservative ever, since we're neglecting a lot of beneficial phenomena...
+NOTE: this approach is the most conservative ever, since we're neglecting a lot, if not all, of beneficial phenomena...
 """
 import pandas as pd
 from thermal_functions import *
 import matplotlib.pyplot as plt
 
-## DISCRETIZATION
+#### ******************************************* DOMAIN DISCRETIZATION ******************************************** ####
 xx = np.linspace(pin_bottom_pos,pin_top_pos,20)
 rr = np.linspace(0,fuel_d_outer/2,10)
 
-#### ************************ DATA ARRAY INITIALIZATION ***************************** ####
+
+
+#### ******************************************* DATA ARRAY INITIALIZATION **************************************** ####
 yy_power_linear = np.zeros_like(xx)
 yy_htc_local = np.zeros_like(xx)
 yy_adim_number_cool = np.zeros([4,len(xx)])
@@ -24,6 +26,9 @@ yy_temp_fuel_in = np.zeros_like(xx)
 rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 test = 0     # to keep tracking...
 
+
+
+#### **************************************************** CALCS *************************************************** ####
 for i in range(0,len(xx)):
     yy_power_linear[i] = power_lin_distribution(xx[i])
     yy_temp_coolant[i] = temp_coolant(xx[i])
@@ -40,7 +45,7 @@ for i in range(0,len(xx)):
 
 
 
-# *********************** OUTPUTS ************************* #
+#### ******************************************** EXCEL OUTPUTS *************************************************** ####
 
 data_coldGeo_tempZ = np.array([ xx, yy_power_linear, yy_temp_coolant, yy_temp_clad_out,
                                 yy_temp_clad_in, yy_temp_fuel_out, yy_temp_fuel_in, yy_htc_local,
@@ -57,11 +62,12 @@ df_power = pd.DataFrame(data_coldGeo_tempZ, columns=titles_power)
 df_power.to_excel("data_coldGeo_alongZ.xlsx",index=False)
 
 
-# ************************ PLOTS ************************** #
+
+#### ************************************************** PLOTS ***************************************************** ####
 
 #### PLOT POWER DISTRIBUTION ####
 
-plt.figure()
+plt.figure(1)
 plt.plot(xx,yy_power_linear, label='Power distribution')
 plt.xlabel("Position in [m]")
 plt.ylabel("Linear power density in [W/m]")
@@ -73,7 +79,7 @@ plt.show()
 #### *********************** PLOT TEMPERATURES (AXIAL) ************************** ####
 
 
-plt.figure()
+plt.figure(2)
 plt.plot(xx,yy_temp_coolant, label='Coolant')
 plt.plot(xx,yy_temp_clad_out, label='Cladding external')
 plt.plot(xx,yy_temp_clad_in, label='Cladding internal')
@@ -84,7 +90,7 @@ plt.grid()
 plt.show()
 
 
-plt.figure()
+plt.figure(3)
 plt.plot(xx,yy_temp_fuel_out, label='Fuel external')
 plt.plot(xx,yy_temp_fuel_in, label='Fuel internal')
 plt.xlabel("Position in [m]")
@@ -96,7 +102,7 @@ plt.show()
 
 #### *********************** PLOT TEMPERATURES (RADIAL) ************************** ####
 # NB cold geo, no redistr, no restructuring, no burn up...
-plt.figure()
+plt.figure(4)
 plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:])
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
@@ -104,8 +110,9 @@ plt.title("Cold geometry, middle position (pin) fuel pellet temperature")
 plt.grid()
 plt.show()
 
+# 3d plot
 x,y = np.meshgrid(rr,xx)
-fig_1 = plt.figure()
+fig_1 = plt.figure(5)
 ax = fig_1.add_subplot(111, projection='3d')
 ax.plot_surface(x,y,rr_temp_fuel_radial,cmap='viridis')
 ax.set_ylabel('Position along the pin [m]')
