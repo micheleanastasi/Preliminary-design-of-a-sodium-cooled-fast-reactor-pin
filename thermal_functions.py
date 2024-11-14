@@ -4,7 +4,7 @@ c'è ancora da considerare burn up effects
 anche fission gases --> K_gas
 anche restructuring
 """
-from numpy import pi, sqrt
+from numpy import pi, sqrt, log
 from sympy.physics.units import temperature
 
 from general_functions import *
@@ -220,11 +220,12 @@ def diameter_th_exp_fuel(diam,temperature):
 
 
 
-#### ********************************** ITERATION - HOT GEOMETRY FUNCTION **************************************** ####
+#### *********************************** ITERATION - HOT GEOMETRY FUNCTION **************************************** ####
 def hot_geometry_iteration(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_status=True):
     """
     Iterative calculation in order to get temperatures, gap, final fuel out and clad out diameters, other properties
     (such as htc, net area, adim. numbers and so on...) in a hot geometry model
+    NOTE! FOR RESTRUCTURING USEFUL UNTIL FUEL OUTER!
     :param z: in m
     :param clad_d_out_0: cold geo diameter, in m
     :param fuel_d_out_0: cold geo diameter, in m
@@ -266,3 +267,40 @@ def hot_geometry_iteration(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_sta
               f"inner: HOT:{np.round(temp_array[4], 2)} K, COLD:{np.round(old_temp[4], 2)} K - Min. gap:{np.round(delta_gap * 1e6,3)} um")
 
     return old_temp, temp_array, delta_gap, other, clad_d_out_0, fuel_d_out_0
+
+
+
+#### ********************************************** RESTRUCTURING ************************************************* ####
+
+## preparatory functions
+def void_factor(rad_fv,rad_fo):
+    x = (rad_fo/rad_fv)**2
+    return 1 - ( log(x) )/(x - 1)
+
+def radius_from_temp(z,r_void,r_fuel_out,temperature,T_fuel_out):
+    """
+    Useful to get radius corresponding to a certain temp in the mono-region pellet model
+    Eventually useful to divide in regions
+    :param z:
+    :param r_void:
+    :param r_fuel_out:
+    :param temperature:
+    :param T_fuel_out:
+    :return:
+    """
+    k_fuel = fuel_thermal_cond.subs(x_om,2)
+    k_fuel = k_fuel.subs(pu_conc,0.29)
+    k_fuel = k_fuel.subs(por,0.12)
+    k_fuel = k_fuel.subs(temp,temperature)
+    v_f = void_factor(r_void, r_fuel_out)
+    output = r_fuel_out*sqrt(1 - (temp-T_fuel_out) * (4 * pi * k_fuel) / (power_lin_distribution(z) * v_f))
+    return output
+
+def radius_void_get(r_clmn,porosity):
+    """
+    to get R void
+    :param r_clmn:
+    :param porosity:
+    :return:
+    """
+    return sqrt( porosity ) * r_clmn # get R void
