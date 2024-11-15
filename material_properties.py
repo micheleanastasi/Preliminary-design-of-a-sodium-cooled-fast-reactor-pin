@@ -77,7 +77,10 @@ fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92
 ## linear thermal ref fuel
 alfa_fuel = 1e-5 # @ 298.15 K
 
-## restructuring temps
+## restructuring properties
 fuel_temp_clmn = 1800 + 273.15 # K
 fuel_temp_eqax = 1600 + 273.15 # K
 
+poro_asf = 0.12
+poro_clmn = 0.05
+poro_void = 1

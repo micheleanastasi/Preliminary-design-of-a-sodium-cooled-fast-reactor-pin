@@ -11,7 +11,7 @@ from design_specifications import *
 
 #### ***************************** GENERAL FUNCTIONS ***************************** ####
 
-def equation_temp_solver(sy_funct, guess):
+def equation_solver(sy_funct, guess):
     """
     Give result from interaction according to one variable: temperature
     :param sy_funct: function to be iterated in Sympy format and temp as variable
@@ -79,7 +79,7 @@ def integral_step_power(z):
     return area
 
 
-#### *********************************** POWER FUNCTIONS CHOICE ********************************* ####
+## POWER FUNCTIONS CHOICE
 def power_lin_distribution(z,approx=True):
     """
     :param z: in m
