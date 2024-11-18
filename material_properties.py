@@ -68,7 +68,7 @@ E = 17109.5
 k_0 = ( 1/(A + B*temp) + (D/(temp**2))*exp(-E/temp) )*(1-por)**2.5
 
 # da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
-fuel_thermal_cond = 1.755 + (k_0 - 1.755)*1
+fuel_thermal_cond = 1.755 + (k_0 - 1.755)*0
 
 ## melting temp
 # da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )

@@ -180,8 +180,9 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,fv=
     return out
 
 
-## ALONG RADIUS - SINGLE REGION (NO RESTRUCTURING)
-def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,r_c=0,temp_clmn=0):
+## ALONG RADIUS - SINGLE REGION (+ RESTRUCTURING)
+# ancora da implementare columnar region!
+def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,r_c=0,r_v=0):
     """
     HP no azimuthal, no angular dependence
 
@@ -200,13 +201,14 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po
     k_fuel = fuel_thermal_cond.subs(x_om,x) # per ora questi valori
     k_fuel = k_fuel.subs(pu_conc,pu)
     k_fuel = k_fuel.subs(por,po)
+    if r_c != 0 and r_v != 0:
+        f_v = void_factor(r_v,fuel_diam_outer/2)
+    else:
+        f_v = 1
 
     fuel_radius_outer = fuel_diam_outer/2
-    if temp_clmn == 0:
-        eqz_1 = temp - temp_fuel_out
-    else:
-        eqz_1 = temp - temp_clmn
-    eqz_2 = ( power_lin_distribution(z) / ( 4*pi*k_fuel ) ) * ( 1 - ((r)/fuel_radius_outer-r_c)**2 ) # sensible?? r - rclmn
+    eqz_1 = temp - temp_fuel_out
+    eqz_2 = ( f_v*power_lin_distribution(z) / ( 4*pi*k_fuel ) ) * ( 1 - ((r)/fuel_radius_outer)**2 ) # sensible?? r - rclmn
 
     res = eqz_1 - eqz_2
     output = equation_solver(res, temp_fuel_inner_guess)
