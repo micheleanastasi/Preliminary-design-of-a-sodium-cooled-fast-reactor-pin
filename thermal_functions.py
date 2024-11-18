@@ -156,35 +156,37 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
 
 ## ALONG Z AXIS - SINGLE REGION (NO RESTRUCTURING)
 ## variabili per conc Pu, porosità ecc
-def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th):
+def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,fv=1):
     """
     Computing inner
     :param z: in m
     :param clad_d_out: - Varying parameter! (hot geometry)
     :param fuel_diam_outer: - Varying parameter! (hot geometry)
     :param clad_th: UNKNOWN --- all these parameters used to calculate delta gap
-    :return: in K
+    :return: temp fuel inner in K
     """
     # da espandere (void factor, zone restructuring, pu redistri... è una bozza al momento!!)
     temp_fuel_inner_guess = 1500 + 273.15
 
     temp_fuel_out,_ = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th) # trattino basso poiché non serve valore delta gap
-    k_fuel = fuel_thermal_cond.subs(x_om,2) # per ora questi valori
-    k_fuel = k_fuel.subs(pu_conc,0.29)
-    k_fuel = k_fuel.subs(por,0.12)
+    k_fuel = fuel_thermal_cond.subs(x_om,x) # per ora questi valori
+    k_fuel = k_fuel.subs(pu_conc,pu)
+    k_fuel = k_fuel.subs(por,po)
 
-    ### NB! MODIFICARE QUI PER RISPETTARE EQUAZIONE!!!! SAI COSA
     eqz_1 = temp - temp_fuel_out
-    eqz_2 = power_lin_distribution(z) / (4*pi*k_fuel)
+    eqz_2 = fv * power_lin_distribution(z) / (4*pi*k_fuel)
     res = eqz_1 - eqz_2
     out = equation_solver(res, temp_fuel_inner_guess)
     return out
 
 
 ## ALONG RADIUS - SINGLE REGION (NO RESTRUCTURING)
-def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,restruct=False):
+def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,r_c=0,temp_clmn=0):
     """
     HP no azimuthal, no angular dependence
+
+    NOTE: from x to po: extraneous parameters to expand functionalities to restructuring (btw they've default, hence no
+    restructuring, values)
     :param r: in m
     :param z: in m
     :param clad_d_out: - Varying parameter! (hot geometry)
@@ -195,13 +197,16 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,restruct=False
     temp_fuel_inner_guess = 1500 + 273.15
 
     temp_fuel_out,_ = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th)
-    k_fuel = fuel_thermal_cond.subs(x_om,2) # per ora questi valori
-    k_fuel = k_fuel.subs(pu_conc,0.29)
-    k_fuel = k_fuel.subs(por,0.12)
+    k_fuel = fuel_thermal_cond.subs(x_om,x) # per ora questi valori
+    k_fuel = k_fuel.subs(pu_conc,pu)
+    k_fuel = k_fuel.subs(por,po)
 
     fuel_radius_outer = fuel_diam_outer/2
-    eqz_1 = temp - temp_fuel_out
-    eqz_2 = ( power_lin_distribution(z) / ( 4*pi*k_fuel ) ) * ( 1 - (r/fuel_radius_outer)**2 )
+    if temp_clmn == 0:
+        eqz_1 = temp - temp_fuel_out
+    else:
+        eqz_1 = temp - temp_clmn
+    eqz_2 = ( power_lin_distribution(z) / ( 4*pi*k_fuel ) ) * ( 1 - ((r)/fuel_radius_outer-r_c)**2 ) # sensible?? r - rclmn
 
     res = eqz_1 - eqz_2
     output = equation_solver(res, temp_fuel_inner_guess)
@@ -279,7 +284,7 @@ def void_factor(rad_fv,rad_fo):
     return 1 - ( log(x) )/(x - 1)
 
 
-def get_R_from_temp(z,r_fuel_out,temperature,T_fuel_out):
+def get_R_from_temp(z,r_fuel_out,temperature,T_fuel_in,T_fuel_out):
     """
     Useful to get radius corresponding to a certain temp in the mono-region pellet model
     Eventually useful to divide in regions
@@ -290,7 +295,7 @@ def get_R_from_temp(z,r_fuel_out,temperature,T_fuel_out):
     :param T_fuel_out:
     :return:
     """
-    check = T_fuel_out > temperature
+    check = T_fuel_in > temperature
     if check:
         k_fuel = fuel_thermal_cond.subs(x_om,2) # mettere variabili
         k_fuel = k_fuel.subs(pu_conc,0.29)
@@ -315,3 +320,4 @@ def radius_void_get(r_clmn,porosity):
 
 def fuel_region_temp_radial(z,r):
 
+    return None
