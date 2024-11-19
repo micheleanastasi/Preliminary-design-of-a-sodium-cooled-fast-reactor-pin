@@ -2,7 +2,7 @@
 Design specification deriving from homework.pdf data
 """
 #### DATA GUESS ####
-clad_thickness_0 = 0.54e-3 # m - first guess
+clad_thickness_0 = 0.51e-3 # m - first guess
 
 
 

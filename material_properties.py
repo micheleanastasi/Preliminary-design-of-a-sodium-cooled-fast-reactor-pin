@@ -12,6 +12,7 @@ Pe_cool = sy.Symbol('Pe')
 x_om = sy.Symbol('x[O/M]')
 pu_conc = sy.Symbol('[Pu]')
 por = sy.Symbol('P')
+b_up = sy.Symbol('B-up')
 
 
 
@@ -68,11 +69,11 @@ E = 17109.5
 k_0 = ( 1/(A + B*temp) + (D/(temp**2))*exp(-E/temp) )*(1-por)**2.5
 
 # da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
-fuel_thermal_cond = 1.755 + (k_0 - 1.755)*0
+fuel_thermal_cond = 1.755 + (k_0 - 1.755)*exp( -b_up/128.75 )
 
 ## melting temp
 # da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
-fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*0
+fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*0#*exp( -b_up/41.01 )
 
 ## linear thermal ref fuel
 alfa_fuel = 1e-5 # @ 298.15 K

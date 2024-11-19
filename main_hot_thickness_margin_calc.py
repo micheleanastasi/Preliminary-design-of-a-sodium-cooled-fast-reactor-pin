@@ -52,7 +52,7 @@ for clad_thick_0 in clad_range: # considering a value of cladding thickness from
     test = 0 # used to keep tracking the computing process
     for i in range(0,len(xx)): # working at z pos...
         yy_power_linear[i] = power_lin_distribution(xx[i])  # linear power calc at z pos
-        yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_iteration(xx[i], clad_d_outer, fuel_d_outer, clad_thick_0)
+        yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_iteration(xx[i], clad_d_outer, fuel_d_outer, clad_thick_0,print_status=False)
         #for j in range(0,len(rr)):
         #    rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j], xx[i], clad_diam_out, fuel_diam_outer, clad_thick_0)
         #    test += 1

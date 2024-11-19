@@ -13,6 +13,7 @@ zz_r_clmn = np.zeros_like(zz)
 zz_r_void = np.zeros_like(zz)
 
 
+
 #### **************************************************** CALCS *************************************************** ####
 
 # r clmn and r void
@@ -43,7 +44,9 @@ for i in range(0, len(zz)): # Z axis
             temp_matrix[i,j] = temp_fuel_inner_radial(rr[j], zz[i], clad_d_out_hot, fuel_d_out_hot, clad_thickness_0,x=0,pu=0.29,po=0.12,r_c=r_c,r_v=r_v)
         else:
             temp_matrix[i, j] = temp_fuel_inner_radial(r_v, zz[i], clad_d_out_hot, fuel_d_out_hot, clad_thickness_0, x=0, pu=0.29, po=0.12, r_c=r_c, r_v=r_v)
-    ## ancora da implementare regioni asf e clmn, calcolo solo T max (void factor) radiale
+    ##
+    ## ancora da implementare regioni asf e clmn, calcolo solo T max (void factor) radiale + hot geometry
+    ##
 """
 # WIP
         if r_c == 0 and r_v == 0: # zones where there isn't restr.

@@ -156,9 +156,9 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
 
 ## ALONG Z AXIS - SINGLE REGION (NO RESTRUCTURING)
 ## variabili per conc Pu, porosità ecc
-def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,fv=1):
+def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,fv=1,burnup=1e4):
     """
-    Computing inner
+    Computing inner according to z position
     :param z: in m
     :param clad_d_out: - Varying parameter! (hot geometry)
     :param fuel_diam_outer: - Varying parameter! (hot geometry)
@@ -172,6 +172,7 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,fv=
     k_fuel = fuel_thermal_cond.subs(x_om,x) # per ora questi valori
     k_fuel = k_fuel.subs(pu_conc,pu)
     k_fuel = k_fuel.subs(por,po)
+    k_fuel = k_fuel.subs(b_up,burnup)
 
     eqz_1 = temp - temp_fuel_out
     eqz_2 = fv * power_lin_distribution(z) / (4*pi*k_fuel)
@@ -182,7 +183,7 @@ def temp_fuel_inner(z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,fv=
 
 ## ALONG RADIUS - SINGLE REGION (+ RESTRUCTURING)
 # ancora da implementare columnar region!
-def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,r_c=0,r_v=0):
+def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po=0.12,r_c=0,r_v=0,burnup=1e4):
     """
     HP no azimuthal, no angular dependence
 
@@ -201,6 +202,8 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,x=0,pu=0.29,po
     k_fuel = fuel_thermal_cond.subs(x_om,x) # per ora questi valori
     k_fuel = k_fuel.subs(pu_conc,pu)
     k_fuel = k_fuel.subs(por,po)
+    k_fuel = k_fuel.subs(b_up, burnup)
+
     if r_c != 0 and r_v != 0:
         f_v = void_factor(r_v,fuel_diam_outer/2)
     else:
@@ -255,8 +258,8 @@ def hot_geometry_iteration(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_sta
         prec_temp_array = temp_array.copy() # to be used to evaluate when exiting from the while below...
 
         # considerare sempre espansione rispetto al diametro INIZIALE
-        clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, prec_temp_array[1])  # with temp clad outer
-        fuel_d_out_0 = diameter_th_exp_fuel(fuel_d_outer, prec_temp_array[3])  # with temp fuel outer
+        clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, (prec_temp_array[2]+prec_temp_array[1])/2)  # with temp clad outer - cambiato to inner
+        fuel_d_out_0 = diameter_th_exp_fuel(fuel_d_outer, (prec_temp_array[4]+prec_temp_array[3])/2)  # with temp fuel outer - cambiato to inner
 
         # hot geo computing
         temp_array[0] = temp_coolant(z)
@@ -318,8 +321,3 @@ def radius_void_get(r_clmn,porosity):
     """
     output = sqrt( porosity ) * r_clmn # get R void
     return output
-
-
-def fuel_region_temp_radial(z,r):
-
-    return None
