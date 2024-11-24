@@ -3,6 +3,7 @@
 
 Main script to get data (only plots currently) in order to estimate an optimal cladding thickness according to gap and
 margin to fuel melting (temp)
+TIME: HOT GEO; HENCE FIRST MOMENTS (NO RESTR, REDISTR, BURN_UP)
 
 NOTE: still missing phenomena such as restructuring, burn-up and redistribution (the latter has minor impact though)
     Nonetheless, up to this point everything was taken into account in a conservative approach, although some aspect should
@@ -30,7 +31,7 @@ resol = 20
 xx = np.linspace(pin_bottom_pos,pin_top_pos,resol)
 rr = np.linspace(0,fuel_d_outer/2,resol)
 
-clad_range = np.arange(0.505e-3,0.560e-3,0.005e-3) # going to compute staff acc. to this clad thick. values
+clad_range = np.arange(0.455e-3,0.545e-3,0.005e-3) # going to compute staff acc. to this clad thick. values
 
 # arrays initialization
 yy_power_linear = np.zeros_like(xx)
@@ -52,7 +53,8 @@ for clad_thick_0 in clad_range: # considering a value of cladding thickness from
     test = 0 # used to keep tracking the computing process
     for i in range(0,len(xx)): # working at z pos...
         yy_power_linear[i] = power_lin_distribution(xx[i])  # linear power calc at z pos
-        yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_iteration(xx[i], clad_d_outer, fuel_d_outer, clad_thick_0,print_status=False)
+        yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_general(
+            xx[i], clad_d_outer, fuel_d_outer, clad_thick_0, print_status=False)
         #for j in range(0,len(rr)):
         #    rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j], xx[i], clad_diam_out, fuel_diam_outer, clad_thick_0)
         #    test += 1
@@ -71,7 +73,7 @@ for clad_thick_0 in clad_range: # considering a value of cladding thickness from
 #### ************************************************* PLOTTING *************************************************** ####
 plt.figure(1)
 plt.plot(clad_th,temp_max,label='Max fuel temp')
-plt.xlim([0.50,0.57])
+plt.xlim([0.45,0.55])
 plt.plot(xx, np.ones(len(xx)) * 2964.92, color='black', linestyle='--', label = 'Melting temp (CONS)') # tmelt provvisoria
 plt.plot(xx, np.ones(len(xx)) * fuel_temp_max_suggested, color='black', linestyle='--', label = 'Max suggested temp') # tmelt provvisoria
 plt.title("Max fuel temp acc. to clad thickness")

@@ -4,14 +4,18 @@ Power distribution function and its integral
 """
 import numpy as np
 import scipy as sp
-from numpy import array
+from numpy import array,pi
 
-from material_properties import *
-from design_specifications import *
+from general_properties import *
+
+#### ************************************************ DOMAIN DISCR ************************************************ ####
+domain = np.linspace(pin_bottom_pos+0.085/2, pin_top_pos-0.085/2, 10)
+
+
 
 #### ***************************** GENERAL FUNCTIONS ***************************** ####
 
-def equation_solver(sy_funct, guess):
+def sy_equation_solver(sy_funct, guess):
     """
     Give result from interaction according to one variable: temperature
     :param sy_funct: function to be iterated in Sympy format and temp as variable
@@ -23,9 +27,16 @@ def equation_solver(sy_funct, guess):
     out = sp.optimize.minimize(res_l, guess, tol=10e-3)
     return out.x[0] # returning solved equation (temperature)
 
+def fun_equation_solver(funct, guess):
 
+    res = lambda t : funct(t) ** 2
+    out = sp.optimize.minimize(res, guess, tol=10e-3)
+    return out.x[0]
 
-#### *********************************** POWER FUNCTIONS ********************************* ####
+def volume_calc(d,h):
+    return (h*pi*d**2)/4
+
+#### *********************************************** POWER FUNCTIONS ********************************************** ####
 
 ## INTERPOLATED - LINEAR POWER DISTRIBUTION FUNCTIONS ##
 def interpolated_power(z):
@@ -79,7 +90,7 @@ def integral_step_power(z):
     return area
 
 
-## POWER FUNCTIONS CHOICE
+## POWER FUNCTIONS CHOICE ##
 def power_lin_distribution(z,approx=True):
     """
     :param z: in m

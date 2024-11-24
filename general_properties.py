@@ -5,6 +5,41 @@ Material properties deriving from homework.pdf data
 import sympy as sy
 from sympy import exp
 
+#### ************************************************ DESIGN SPECS ************************************************ ####
+#### DATA GUESS ####
+clad_thickness_0 = 0.51e-3 # m - first guess
+
+
+#### ************ THERMO HYDRAULICS ************* ####
+cool_temp_inlet = 395 + 273.15 # K
+cool_mass_flow = 0.049 # kg/s
+cool_press_inlet = 0.1e6 # Pa
+f_pitch = 0.5 # volume control is a triangle
+pin_pitch = 8.275e-3 # m
+
+
+#### ***************** FUEL PIN SPECIFICATIONS ******************* ####
+temp_in = 293.15 # K
+
+pin_bottom_pos = 0  # m
+pin_top_pos = .850  # m
+pin_column_height = 0.85 # m
+
+clad_d_outer = 6.55e-3 # m
+
+fuel_d_outer = 5.42e-3 #m
+fuel_height = 7e-3 # m
+
+fill_gas_temp_in = 293.15 # K - initial temperature
+
+
+#### ************** POWER DISTRIBUTION ************* ####
+power_lin_max = 38700 # W/m - linear power @ peak factor node (@ 0.3825 m over the bottom)
+
+
+
+#### *********************************************** MATERIAL SPECS *********************************************** ####
+
 ## Symbols used from sympy - conversioni temperatura
 temp = sy.Symbol('T[K]')
 temp_f = sy.Symbol('T[°F]')
@@ -13,7 +48,6 @@ x_om = sy.Symbol('x[O/M]')
 pu_conc = sy.Symbol('[Pu]')
 por = sy.Symbol('P')
 b_up = sy.Symbol('B-up')
-
 
 
 #### ****************** COOLANT PROPERTIES ********************* ####
@@ -61,14 +95,11 @@ helium_thermal_cond = 15.8e-4 * temp**0.79
 fuel_temp_max_suggested = 2600 + 273.15 # K
 
 ## thermal conductivity: kelvin...
-# per adesso usare x = 2, Pu = 20%, por = 12%
 A = 0.01926 + 1.06e-6 * x_om + 2.63e-8 * pu_conc
 B = 2.39e-4 + 1.37e-13 * pu_conc
 D = 5.27e9
 E = 17109.5
 k_0 = ( 1/(A + B*temp) + (D/(temp**2))*exp(-E/temp) )*(1-por)**2.5
-
-# da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
 fuel_thermal_cond = 1.755 + (k_0 - 1.755)*exp( -b_up/128.75 )
 
 ## melting temp
@@ -85,3 +116,11 @@ fuel_temp_eqax = 1600 + 273.15 # K
 poro_asf = 0.12
 poro_clmn = 0.05
 poro_void = 1
+
+def th_fuel(temperature,x=0,pu=0.29,po=0.12,bup=1e4):
+    output = fuel_thermal_cond.subs(x_om, x)
+    output = output.subs(pu_conc, pu)
+    output = output.subs(por, po)
+    output = output.subs(b_up, bup)
+    output = output.subs(temp,temperature)
+    return output
