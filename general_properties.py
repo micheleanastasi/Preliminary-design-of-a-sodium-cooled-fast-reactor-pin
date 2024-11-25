@@ -10,6 +10,7 @@ from sympy import exp
 clad_thickness_0 = 0.51e-3 # m - first guess
 
 
+
 #### ************ THERMO HYDRAULICS ************* ####
 cool_temp_inlet = 395 + 273.15 # K
 cool_mass_flow = 0.049 # kg/s
@@ -29,6 +30,8 @@ clad_d_outer = 6.55e-3 # m
 
 fuel_d_outer = 5.42e-3 #m
 fuel_height = 7e-3 # m
+
+initial_delta_gap = clad_d_outer/2 - clad_thickness_0 - fuel_d_outer/2
 
 fill_gas_temp_in = 293.15 # K - initial temperature
 

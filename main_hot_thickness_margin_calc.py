@@ -27,7 +27,7 @@ from thermal_functions import *
 
 
 #### ******************************************* DOMAIN DISCRETIZATION ******************************************** ####
-resol = 20
+resol = 10
 xx = np.linspace(pin_bottom_pos,pin_top_pos,resol)
 rr = np.linspace(0,fuel_d_outer/2,resol)
 

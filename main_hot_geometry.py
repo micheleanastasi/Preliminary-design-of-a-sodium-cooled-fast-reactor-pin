@@ -129,6 +129,15 @@ plt.legend()
 plt.grid()
 plt.show()
 
+## delta tra clad in e out (hot)
+plt.figure()
+delta_temp_cl = yy_hot_temp[:,2] - yy_hot_temp[:,1]
+plt.plot(xx,delta_temp_cl)
+plt.xlabel("Position in [m]")
+plt.ylabel("Delta temperature in [K]")
+plt.title("Axial delta temp btw clad in e clad out @ HOT GEO")
+plt.grid()
+plt.show()
 
 #### ***************** PLOT TEMPERATURES (RADIAL) ******************* ####
 plt.figure()

@@ -263,8 +263,9 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_statu
     other = np.array(list([yy_htc_loc]) + list(yy_adim_num_cool) + list(yy_cool_loc_prop))
 
     if print_status: # optional "progress bar" print (see input boolean)
-        print(f"Hot geo completed at {np.round(100 * z / 0.85, 2)}% (Position: {np.round(z, 2)} m) - Temp fuel "
-              f"inner: HOT:{np.round(temp_array[4], 2)} K, COLD:{np.round(old_temp[4], 2)} K - Min. gap:{delta_gap*1e6} um")
+        print(f"Completed at {np.round(100 * z / 0.85, 2)}% (Position: {np.round(z, 2)} m) - Fuel "
+              f"inner: HOT:{np.round(temp_array[4], 2)} K, COLD:{np.round(old_temp[4], 2)} K - New gap:{delta_gap*1e6} um  "
+              f" {100 * delta_gap / initial_delta_gap}%")
 
     return old_temp, temp_array, delta_gap, other, clad_d_out_0, fuel_d_out_0
 
