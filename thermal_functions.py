@@ -4,7 +4,7 @@ c'è ancora da considerare burn up effects
 anche fission gases --> K_gas
 anche restructuring
 """
-
+from mpmath import arange
 from numpy import pi
 from scipy.integrate import quad as integral
 from math import sqrt,log
@@ -13,7 +13,7 @@ from general_functions import *
 from general_properties import *
 
 
-#### ************************* TEMP PROFILE OF COOLANT ALONG Z AXIS ************************ ####
+#### ********************************* TEMP PROFILE OF COOLANT ALONG Z AXIS *************************************** ####
 
 def temp_coolant(z):
     """
@@ -32,6 +32,7 @@ def temp_coolant(z):
 
     T_coolant_at_z = sy_equation_solver(res, T_0)
     return T_coolant_at_z
+
 
 
 
@@ -90,6 +91,7 @@ def temp_cladding_outer(z,clad_d_out):
 
 
 
+
 #### *********** TEMP PROFILE OF CLADDING (INNER) ALONG Z AXIS ************** ####
 #
 # as we don't know thickness, I'm just using a reasonable value (see general_properties.py), only later we're going to solve for it...
@@ -116,6 +118,7 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
 
     output = sy_equation_solver(res, temp_ci_guess)
     return output
+
 
 
 
@@ -152,8 +155,8 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
 
 
 
-#### ********************************** TEMPERATURE PROFILE OF INNER FUEL  **************************************** ####
 
+#### ********************************** TEMPERATURE PROFILE OF INNER FUEL  **************************************** ####
 
 ## ALONG Z AXIS - SINGLE REGION (NO RESTRUCTURING)
 def temp_fuel_max(z,clad_d_out,fuel_diam_outer,clad_th,fv=1,burnup=1e4):
@@ -197,7 +200,8 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,burnup=1e4):
 
 
 
-#### ************************************** HOT GEO - THERMAL EXPANSION ******************************************* ####
+
+#### ***************************************** GEOMETRIES EXPANSIONS ********************************************** ####
 
 def diameter_th_exp_cladding(diam,t_max):
     """
@@ -207,16 +211,34 @@ def diameter_th_exp_cladding(diam,t_max):
     return diam + clad_exp*diam
    # return diam + diam * alfa_clad * (t_max - temp_in)
 
-def diameter_th_exp_fuel(diam,t_max, t_min):
-    temp_mean = t_min + (t_max - t_min)*2/3
-    return diam + diam * alfa_fuel * (temp_mean - temp_in)
+def diameter_fuel_var(z,diam,t_max, t_min,burnup=0):
+    """
+    CONSIDERING THERMAL AND SWELLING
+    By equation: new_rad = old_rad + alfa * Int(A-Br^2, btw 0 and old rad)
+    OSS burn up in MWd/ton(HM)
+    """
+    radius = diam/2
+    k_integ = integral(th_fuel, t_min, t_max)[0]
+    A = t_min + (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ )
+    B = (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ*radius**2 )
+    out = ( radius + alfa_fuel * ( A*radius - (B/3)*radius**3 ) ) # verifica correttezza swelling !
+    return ( out * 2 ) * ( 1 + 0.07 * burnup/1000 ) # burnup in MWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
+   # temp_mean = t_min + (t_max - t_min)*2/3
+   # return diam + diam * alfa_fuel * (temp_mean - temp_in)
+
 
 def length_th_exp_cladding(leng,t_max):
-    return leng + leng*clad_eps_th.subs(temp,t_max)
+    return leng + leng*clad_eps_th.subs(temp,t_max)\
 
-def length_th_exp_fuel(leng,t_max,t_min):
-    temp_mean = t_min + (t_max - t_min)*2/3
-    return leng + leng*alfa_fuel* ( temp_mean - temp_in)
+def length_th_exp_fuel(leng,t_max,t_min,burnup=0):
+    """
+    CONSIDERING THERMAL AND SWELLING
+    By equation: new_rad = old_rad + alfa * Int(A-Br^2, btw 0 and old rad)
+    OSS burn up in MWd/ton(HM)
+    """
+    out = ( leng + leng*alfa_fuel* ( t_max - temp_in) ) # (HP CONS)
+    return ( out * 2 ) * ( 1 + 0.07 * burnup/1000 ) # burnup in MWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
+
 
 
 
@@ -225,6 +247,7 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_statu
     """
     Iterative calculation in order to get temperatures, gap, final fuel out and clad out diameters, other properties
     (such as htc, net area, adim. numbers and so on...) in a hot geometry model
+    Also accounting for fuel swelling
     NOTE! FOR RESTRUCTURING USEFUL UNTIL FUEL OUTER!
     :param z: in m
     :param clad_d_out_0: cold geo diameter, in m
@@ -248,7 +271,7 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_statu
 
         # considerare sempre espansione rispetto al diametro INIZIALE
         clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, (prec_temp_array[2]))  # with temp clad innter HP CONS
-        fuel_d_out_0 = diameter_th_exp_fuel(fuel_d_outer, prec_temp_array[4],prec_temp_array[3])  # with temp fuel outer - cambiato to inner
+        fuel_d_out_0 = diameter_fuel_var(z,fuel_d_outer, prec_temp_array[4],prec_temp_array[3])  # with temp fuel outer - cambiato to inner
 
         # hot geo computing
         temp_array[0] = temp_coolant(z)
@@ -307,8 +330,8 @@ def fuel_temp_clmn_region(r,z,radius_clmn,radius_void):
     #res = lambda t : t - fuel_temp_clmn - ( (t - fuel_temp_clmn) * power_lin_distribution(z) / (2*pi*integral(th_fuel, fuel_temp_clmn, t)[0]) ) * ( log(radius_clmn/r) )
     #res = lambda t: t - fuel_temp_clmn - ( power_lin_distribution(z) / (2 * pi * 1.7555)) * (log(radius_clmn / radius_void))
 
-    output = fun_equation_solver(res, temp_0)
-    return output
+  #  output = fun_equation_solver(res, temp_0)
+    return None
 
 
 
@@ -324,8 +347,41 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out)
     else:
         temp_void = old
 
-    ## hot geo
+    ## hot geo - only one "iteration"
     old_diam = diam_fuel_out
-    diam_fuel_out = diameter_th_exp_fuel(fuel_d_outer,temp_void,temp_fuel_out)
+    diam_fuel_out = diameter_fuel_var(z,fuel_d_outer,temp_void,temp_fuel_out)
 
     return diam_fuel_out, old_diam, radius_clmn, radius_void, temp_void, old
+
+
+
+
+#### **************************************************** GAS IN GAP ********************************************** ####
+
+def gap_vol_cold():
+    vol_1 = pin_column_height * 0.25*pi*clad_d_outer**2
+    vol_2 = pin_column_height * 0.25*pi*fuel_d_outer**2 # HP coincidenza altezze
+    return vol_1 - vol_2
+
+
+def gap_vol_hot(fuel_d_out_array,clad_d_in_array):
+## check se corretto
+    num = len(fuel_d_out_array)
+    unit = pin_column_height/num    # unit of length (discretization)
+    vol = 0     # init volume
+
+    for i in range(0,num):
+        vol = vol + unit * 0.25 * pi * (clad_d_in_array[i] ** 2 - fuel_d_out_array[i] ** 2)
+
+    return vol
+
+def pressure_gap_calc(volume,temp):
+    # solo He per ora, integrare profilo temperatura
+    R = 8.31446
+    moli_in = (fill_gas_press_in*gap_vol_cold()) / (R*fill_gas_temp_in)
+    press = (moli_in*R*temp)/volume
+
+    return press
+
+temp = pressure_gap_calc(gap_vol_cold()/10,1000)
+print(f"{np.round(temp/1e6,2)} MPa")

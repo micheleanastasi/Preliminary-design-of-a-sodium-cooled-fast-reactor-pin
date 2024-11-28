@@ -22,7 +22,7 @@ from thermal_functions import *
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 #xx = domain
-xx = np.linspace(pin_bottom_pos, pin_top_pos, 20)
+xx = np.linspace(pin_bottom_pos, pin_top_pos, 5)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5]) # coolant, clad out, clad in, fuel out, fuel in
@@ -30,20 +30,22 @@ yy_hot_temp = np.zeros([len(xx),5]) # the same
 yy_gap = np.zeros([len(xx),1])
 yy_properties = np.zeros([len(xx),11])
 rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
-
+clad_diam_out = np.zeros_like(xx)
+fuel_diam_outer = np.zeros_like(xx)
 
 
 #### **************************************************** CALCS *************************************************** ####
 test = 0
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
-    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out, fuel_diam_outer = hot_geometry_general(
+    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out[i], fuel_diam_outer[i] = hot_geometry_general(
         xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0)
     for j in range(0,len(rr)):  # radius
-        rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out,fuel_diam_outer,clad_thickness_0)
+        rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out[i],fuel_diam_outer[i],clad_thickness_0)
         test += 1
 
-
+print(gap_vol_cold())
+print(gap_vol_hot(fuel_diam_outer, clad_diam_out))
 
 
 
