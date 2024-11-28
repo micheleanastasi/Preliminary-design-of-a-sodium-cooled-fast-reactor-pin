@@ -294,6 +294,7 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,print_statu
 
 
 
+
 #### ********************************************** RESTRUCTURING ************************************************* ####
 
 ## preparatory functions
@@ -365,7 +366,7 @@ def gap_vol_cold():
 
 
 def gap_vol_hot(fuel_d_out_array,clad_d_in_array):
-## check se corretto
+## check se corretto, inoltre tenere conto (In cold) dello spazio extra rihiesto per ex lungo asse
     num = len(fuel_d_out_array)
     unit = pin_column_height/num    # unit of length (discretization)
     vol = 0     # init volume
@@ -375,13 +376,16 @@ def gap_vol_hot(fuel_d_out_array,clad_d_in_array):
 
     return vol
 
-def pressure_gap_calc(volume,temp):
-    # solo He per ora, integrare profilo temperatura
+def pressure_gap_calc(volume,temp_clad_array):
+    # solo He per ora, integrare cambiamento gas
+
+    mean_temp_prof = np.mean(temp_clad_array,axis=1)
+    mean_temp = np.mean(mean_temp_prof)
     R = 8.31446
     moli_in = (fill_gas_press_in*gap_vol_cold()) / (R*fill_gas_temp_in)
-    press = (moli_in*R*temp)/volume
+    press = (moli_in*R*mean_temp)/volume
 
     return press
 
-temp = pressure_gap_calc(gap_vol_cold()/10,1000)
-print(f"{np.round(temp/1e6,2)} MPa")
+#temp = pressure_gap_calc(gap_vol_cold(),800)
+#print(f"{np.round(temp/1e6,2)} MPa")
