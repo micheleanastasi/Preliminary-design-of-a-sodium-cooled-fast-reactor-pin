@@ -15,6 +15,7 @@ SO the kinetics is:
 properties changing: k_fuel, Tm_fuel, ...
 """
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from thermal_functions import *
 
@@ -22,7 +23,7 @@ from thermal_functions import *
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 #xx = domain
-xx = np.linspace(pin_bottom_pos, pin_top_pos, 2)
+xx = np.linspace(pin_bottom_pos, pin_top_pos, 10)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5]) # coolant, clad out, clad in, fuel out, fuel in
@@ -33,6 +34,11 @@ rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 clad_diam_out = np.zeros_like(xx)
 fuel_diam_outer = np.zeros_like(xx)
 mean_temp_gap = np.zeros([len(xx),2])
+
+def extra_finder(clad_diam_in):
+
+
+    return None
 
 
 #### **************************************************** CALCS *************************************************** ####
@@ -48,10 +54,30 @@ for i in range(0,len(xx)): # Z axis
         test += 1
 
 print(gap_vol_cold())
-print(gap_vol_hot(fuel_diam_outer, clad_diam_out))
-test = pressure_gap_calc(gap_vol_hot(fuel_diam_outer, clad_diam_out), mean_temp_gap)
-#print(mean_temp_gap)
-print(f"{test/1e6} MPa")
+vol_hot = gap_vol_hot(fuel_diam_outer, clad_diam_out)
+print(vol_hot)
+test_1, test_2 = pressure_gap_calc(vol_hot, mean_temp_gap, extra_vol=1e-6, temp_extra_vol=yy_hot_temp[0,0],clad_d_in_extra=clad_d_inner)
+print(f"{test_1/1e6} MPa")
+print(f"extra length {test_2} m")
+
+## calcolo pressione in funzione di extra volume (in termini di lunghezza)
+vol_extra = np.arange(0.5e-6,55e-6,0.5e-6)
+res_y = np.zeros_like(vol_extra)
+res_x = np.zeros_like(vol_extra)
+
+c = 0
+for i in vol_extra:
+    res_y[c], res_x[c] = pressure_gap_calc(vol_hot, mean_temp_gap, extra_vol=i, temp_extra_vol=yy_hot_temp[0,0],clad_d_in_extra=clad_d_inner)
+    c += 1
+print(f"temp di calcolo per extra vol in K: {yy_hot_temp[0,0]}")
+plt.figure()
+plt.plot(res_x*1000,res_y/1e6)
+plt.grid()
+plt.xlabel("Lunghezza extra in mm")
+plt.ylabel("Pressione totale in cladding")
+plt.show()
+
+
 
 
 #### ************************************************* EXCEL PRINT ************************************************ ####

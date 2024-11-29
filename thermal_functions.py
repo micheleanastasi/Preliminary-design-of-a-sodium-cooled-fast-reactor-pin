@@ -216,7 +216,7 @@ def diameter_th_exp_cladding(diam,t_max):
     return diam + clad_exp*diam
    # return diam + diam * alfa_clad * (t_max - temp_in)
 
-def diameter_fuel_var(z,diam,t_max, t_min,burnup=0):
+def diameter_fuel_var(z,diam,t_max, t_min,burnup=50):
     """
     CONSIDERING THERMAL AND SWELLING
     By equation: new_rad = old_rad + alfa * Int(A-Br^2, btw 0 and old rad)
@@ -227,7 +227,7 @@ def diameter_fuel_var(z,diam,t_max, t_min,burnup=0):
     A = t_min + (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ )
     B = (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ*radius**2 )
     out = ( radius + alfa_fuel * ( A*radius - (B/3)*radius**3 ) ) # verifica correttezza swelling !
-    return ( out * 2 ) * ( 1 + 0.07 * burnup ) # burnup in GWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
+    return ( out * 2 ) # * ( 1 + 0.07 * burnup/1000 ) # burnup in MWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
    # temp_mean = t_min + (t_max - t_min)*2/3
    # return diam + diam * alfa_fuel * (temp_mean - temp_in)
 
@@ -366,16 +366,16 @@ def gap_vol_cold():
     vol_2 = pin_column_height * 0.25*pi*fuel_d_outer**2 # HP coincidenza altezze
     return vol_1 - vol_2
 
-
-def gap_vol_hot(fuel_d_out_array,clad_d_in_array):
+def gap_vol_hot(fuel_d_out_array,clad_d_out_array):
 ## check se corretto, inoltre tenere conto (In cold) dello spazio extra rihiesto per ex lungo asse
     num = len(fuel_d_out_array)
     unit = pin_column_height/num    # unit of length (discretization)
     vol = 0     # init volume
+    clad_diameter_in = clad_d_out_array - 2*clad_thickness_0
 
     for i in range(0,num):
-        vol = vol + unit * 0.25 * pi * (clad_d_in_array[i] ** 2 - fuel_d_out_array[i] ** 2)
-    return vol
+        vol = vol + unit * 0.25 * pi * (clad_diameter_in[i] ** 2 - fuel_d_out_array[i] ** 2)
+    return np.sum(vol)
 
 
 def fg_prod(burnup):
@@ -385,7 +385,6 @@ def fg_prod(burnup):
     HP: FGR = 100 % (conservative/worst case and also easier)
     """
     N_av = 6.022e23 # atoms/mol
-
     y_xe = 0.27
     y_kr = 0.03
     y_he = 0.022 # da implementare poi il resto... vd dispense
@@ -404,24 +403,33 @@ def fg_prod(burnup):
     mol_he = ( y_he * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
     return mol_xe*time, mol_kr*time, mol_he*time
 
-def pressure_gap_calc(volume_gap,temp_clad_array,burnup=50):
+def pressure_gap_calc(volume_gap,temp_clad_array,burnup=50,extra_vol=0,clad_d_in_extra=0,temp_extra_vol=0):
     """
     Partial pressure computing and then summing them up
     """
     R = 8.31446 # J/K/mol
-    mean_temp_prof = np.mean(temp_clad_array,axis=1)
-    mean_temp = np.mean(mean_temp_prof)
+    mean_temp = np.mean(temp_clad_array,axis=1)
+    mean_temp = np.mean(mean_temp)
     #mean_temp = temp_clad_array # ********** provvisorio x test ********* #
+    print(f" Mean temp in K: {mean_temp}")
 
     mol_he_in = (fill_gas_press_in * gap_vol_cold()) / (R * fill_gas_temp_in)
     mol_xe = fg_prod(burnup)[0]
     mol_kr = fg_prod(burnup)[1]
     mol_he = fg_prod(burnup)[2] + mol_he_in
 
-    press_xe = (mol_xe * R * mean_temp) / volume_gap
-    press_kr = (mol_kr * R * mean_temp) / volume_gap
-    press_he = (mol_he * R * mean_temp) / volume_gap
-    return press_he + press_xe + press_kr # Pa
+    vol = volume_gap + extra_vol
+    mean_temp = ( volume_gap*mean_temp + extra_vol*temp_extra_vol) / ( volume_gap + extra_vol ) #ok media temperatura così?
+
+    out_2 = 0
+    if clad_d_in_extra != 0:
+        out_2 = extra_vol / (0.25 * pi * clad_d_in_extra ** 2) # m
+
+    press_xe = (mol_xe * R * mean_temp) / vol
+    press_kr = (mol_kr * R * mean_temp) / vol
+    press_he = (mol_he * R * mean_temp) / vol
+    out_1 = press_he + press_xe + press_kr
+    return out_1, out_2  # Pa
 
 #temp = pressure_gap_calc(gap_vol_cold(), 800)
 #print(f"{np.round(temp/1e6,2)} MPa")
