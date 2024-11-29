@@ -227,7 +227,7 @@ def diameter_fuel_var(z,diam,t_max, t_min,burnup=50):
     A = t_min + (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ )
     B = (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ*radius**2 )
     out = ( radius + alfa_fuel * ( A*radius - (B/3)*radius**3 ) ) # verifica correttezza swelling !
-    return ( out * 2 ) # * ( 1 + 0.07 * burnup/1000 ) # burnup in MWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
+    return ( out * 2 ) # * ( 1 + 0.07 * burnup ) # burnup in GWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
    # temp_mean = t_min + (t_max - t_min)*2/3
    # return diam + diam * alfa_fuel * (temp_mean - temp_in)
 
