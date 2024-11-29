@@ -22,7 +22,7 @@ from thermal_functions import *
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 #xx = domain
-xx = np.linspace(pin_bottom_pos, pin_top_pos, 10)
+xx = np.linspace(pin_bottom_pos, pin_top_pos, 2)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5]) # coolant, clad out, clad in, fuel out, fuel in
@@ -49,7 +49,7 @@ for i in range(0,len(xx)): # Z axis
 
 print(gap_vol_cold())
 print(gap_vol_hot(fuel_diam_outer, clad_diam_out))
-test = pressure_gap_calc(gap_vol_hot(fuel_diam_outer, clad_diam_out),mean_temp_gap)
+test = pressure_gap_calc(gap_vol_hot(fuel_diam_outer, clad_diam_out), mean_temp_gap)
 #print(mean_temp_gap)
 print(f"{test/1e6} MPa")
 

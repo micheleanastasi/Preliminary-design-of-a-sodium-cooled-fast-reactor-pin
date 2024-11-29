@@ -108,10 +108,13 @@ fuel_thermal_cond = 1.755 + (k_0 - 1.755)*exp( -b_up/128.75 )
 
 ## melting temp
 # da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
-fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*0#*exp( -b_up/41.01 )
+fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*0#*exp( -b_up/41.01 ) # burnup[then time evolution]
 
 ## linear thermal ref fuel
 alfa_fuel = 1e-5 # @ 298.15 K
+
+## density
+fuel_density = 11.31e3 * 0.945 # kg/m^3
 
 ## restructuring properties
 fuel_temp_clmn = 1800 + 273.15 # K
@@ -121,10 +124,29 @@ poro_asf = 0.12
 poro_clmn = 0.05
 poro_void = 1
 
+# burnup[then time evolution]
 def th_fuel(temperature,x=0,pu=0.29,po=0.12,bup=1e4):
+    """
+    BURN UP IN GWd/ton
+    """
     output = fuel_thermal_cond.subs(x_om, x)
     output = output.subs(pu_conc, pu)
     output = output.subs(por, po)
     output = output.subs(b_up, bup)
     output = output.subs(temp,temperature)
     return output
+
+# completare
+def th_gap(temperature,x_he=1,x_xe=0,x_kr=0,burnup=0):
+
+    x_tot = x_he + x_xe + x_kr
+    x_he_rel = x_he/x_tot
+    x_xe_rel = x_xe/x_tot
+    x_kr_rel = x_kr/x_tot
+
+    k_he = 15.8*1e-4 * temperature**0.79
+    k_xe = 0.72*1e-4 * temperature**0.79
+    k_kr = 1.15*1e-4 * temperature**0.79
+
+    out = k_he**x_he_rel + k_xe**x_xe_rel + k_kr**x_kr_rel
+    return out

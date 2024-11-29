@@ -9,6 +9,8 @@ from numpy import pi
 from scipy.integrate import quad as integral
 from math import sqrt,log
 
+from scipy.special import y0_zeros
+
 from general_functions import *
 from general_properties import *
 
@@ -141,11 +143,14 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th):
     """
     temp_fuel_outer_guess = 1000 + 273.15
     delta_gap = (clad_d_out - 2 * clad_th - fuel_diam_outer) / 2
-    delta_gap_eff = delta_gap + 10e-6 # m - 10e-6 He as we consider initially 100% He...
+    delta_gap_eff = delta_gap + 10e-6 # m - 10e-6 He as we consider initially 100% He... RVD CIO!!!! cambio % he
     temp_clad_in = temp_cladding_inner(z,clad_d_out,clad_th)
+    #gap_k = helium_thermal_cond.subs(temp,temp_clad_in)
+    gap_k = th_gap(temp_clad_in) # (HPCONS)
 
     eqz_1 = temp - temp_clad_in
-    eqz_2 = power_lin_distribution(z) * delta_gap_eff / ( pi * fuel_diam_outer * helium_thermal_cond )
+    #eqz_2 = power_lin_distribution(z) * delta_gap_eff / ( pi * fuel_diam_outer * helium_thermal_cond )
+    eqz_2 = power_lin_distribution(z) * delta_gap_eff / (pi * fuel_diam_outer * gap_k)
     res = eqz_1 - eqz_2
     if delta_gap >= 0:
         out = sy_equation_solver(res, temp_fuel_outer_guess)
@@ -215,14 +220,14 @@ def diameter_fuel_var(z,diam,t_max, t_min,burnup=0):
     """
     CONSIDERING THERMAL AND SWELLING
     By equation: new_rad = old_rad + alfa * Int(A-Br^2, btw 0 and old rad)
-    OSS burn up in MWd/ton(HM)
+    OSS burn up in GWd/ton(HM)
     """
     radius = diam/2
     k_integ = integral(th_fuel, t_min, t_max)[0]
     A = t_min + (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ )
     B = (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ*radius**2 )
     out = ( radius + alfa_fuel * ( A*radius - (B/3)*radius**3 ) ) # verifica correttezza swelling !
-    return ( out * 2 ) * ( 1 + 0.07 * burnup/1000 ) # burnup in MWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
+    return ( out * 2 ) * ( 1 + 0.07 * burnup ) # burnup in GWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
    # temp_mean = t_min + (t_max - t_min)*2/3
    # return diam + diam * alfa_fuel * (temp_mean - temp_in)
 
@@ -233,11 +238,10 @@ def length_th_exp_cladding(leng,t_max):
 def length_th_exp_fuel(leng,t_max,t_min,burnup=0):
     """
     CONSIDERING THERMAL AND SWELLING
-    By equation: new_rad = old_rad + alfa * Int(A-Br^2, btw 0 and old rad)
-    OSS burn up in MWd/ton(HM)
+    OSS burn up in GWd/ton(HM)
     """
     out = ( leng + leng*alfa_fuel* ( t_max - temp_in) ) # (HP CONS)
-    return ( out * 2 ) * ( 1 + 0.07 * burnup/1000 ) # burnup in MWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
+    return ( out * 2 ) * ( 1 + 0.07 * burnup ) # burnup in GWd/ton(HM) - POI SPOSTARE FUNZIONE IN GEN_PROP.PY
 
 
 
@@ -316,16 +320,12 @@ def get_R_from_temp(z,d_fuel_out,temperature,T_fuel_in,T_fuel_out):
         output = 0
     return output
 
-
 def radius_void_get(r_clmn,porosity):
-    """
-    to get R void
-    """
     output = sqrt( porosity ) * r_clmn # get R void
     return output
 
 
-
+"""
 def fuel_temp_clmn_region(r,z,radius_clmn,radius_void):
     temp_0 = 1500 + 273.15
     #res = lambda t : t - fuel_temp_clmn - ( (t - fuel_temp_clmn) * power_lin_distribution(z) / (2*pi*integral(th_fuel, fuel_temp_clmn, t)[0]) ) * ( log(radius_clmn/r) )
@@ -333,11 +333,13 @@ def fuel_temp_clmn_region(r,z,radius_clmn,radius_void):
 
   #  output = fun_equation_solver(res, temp_0)
     return None
-
+"""
 
 
 def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out):
-
+    """
+    HP CONS (verify?): using fv but neglecting beneficial increase of k_Fuel in col. region...
+    """
     radius_clmn = get_R_from_temp(z,diam_fuel_out,fuel_temp_clmn,temp_fuel_in,temp_fuel_out)
     radius_void = radius_void_get(radius_clmn,poro_asf)
 
@@ -373,19 +375,53 @@ def gap_vol_hot(fuel_d_out_array,clad_d_in_array):
 
     for i in range(0,num):
         vol = vol + unit * 0.25 * pi * (clad_d_in_array[i] ** 2 - fuel_d_out_array[i] ** 2)
-
     return vol
 
-def pressure_gap_calc(volume,temp_clad_array):
-    # solo He per ora, integrare cambiamento gas
 
+def fg_prod(burnup):
+    """
+    Burn up in GWd/ton!!
+
+    HP: FGR = 100 % (conservative/worst case and also easier)
+    """
+    N_av = 6.022e23 # atoms/mol
+
+    y_xe = 0.27
+    y_kr = 0.03
+    y_he = 0.022 # da implementare poi il resto... vd dispense
+
+    E_fiss = 200e6 * 1.6e-19 # J
+    q_third = power_lin_max/ (pi*0.25*fuel_d_outer**2) # W/m^3
+    vol = pin_column_height * (pi*0.25*fuel_d_outer**2) # m^3
+    F_prime = q_third / E_fiss # fiss/s/m^3
+
+    mass = fuel_density * vol/1000 # ton
+    q = power_lin_max * pin_column_height / 1e9 # GW
+    time = burnup * 86400 * mass/ q # seconds
+
+    mol_xe = ( y_xe * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
+    mol_kr = ( y_kr * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
+    mol_he = ( y_he * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
+    return mol_xe*time, mol_kr*time, mol_he*time
+
+def pressure_gap_calc(volume_gap,temp_clad_array,burnup=50):
+    """
+    Partial pressure computing and then summing them up
+    """
+    R = 8.31446 # J/K/mol
     mean_temp_prof = np.mean(temp_clad_array,axis=1)
     mean_temp = np.mean(mean_temp_prof)
-    R = 8.31446
-    moli_in = (fill_gas_press_in*gap_vol_cold()) / (R*fill_gas_temp_in)
-    press = (moli_in*R*mean_temp)/volume
+    #mean_temp = temp_clad_array # ********** provvisorio x test ********* #
 
-    return press
+    mol_he_in = (fill_gas_press_in * gap_vol_cold()) / (R * fill_gas_temp_in)
+    mol_xe = fg_prod(burnup)[0]
+    mol_kr = fg_prod(burnup)[1]
+    mol_he = fg_prod(burnup)[2] + mol_he_in
 
-#temp = pressure_gap_calc(gap_vol_cold(),800)
+    press_xe = (mol_xe * R * mean_temp) / volume_gap
+    press_kr = (mol_kr * R * mean_temp) / volume_gap
+    press_he = (mol_he * R * mean_temp) / volume_gap
+    return press_he + press_xe + press_kr # Pa
+
+#temp = pressure_gap_calc(gap_vol_cold(), 800)
 #print(f"{np.round(temp/1e6,2)} MPa")
