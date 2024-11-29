@@ -35,11 +35,6 @@ clad_diam_out = np.zeros_like(xx)
 fuel_diam_outer = np.zeros_like(xx)
 mean_temp_gap = np.zeros([len(xx),2])
 
-def extra_finder(clad_diam_in):
-
-
-    return None
-
 
 #### **************************************************** CALCS *************************************************** ####
 test = 0
