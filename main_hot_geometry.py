@@ -1,6 +1,8 @@
 """
 *** HOT GEOMETRY THERMAL ANALYSIS ***
 
+Main script to exploit functions and then computing results
+
 NOTE: still missing phenomena such as restructuring, burn-up and redistribution (the latter has minor impact though)
     Nonetheless, up to this point everything was taken into account in a conservative approach, although some aspect should
     be evaluated accordingly (i.e. how much is Pu redistr. negligible?)
@@ -23,7 +25,7 @@ from thermal_functions import *
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 #xx = domain
-xx = np.linspace(pin_bottom_pos, pin_top_pos, 10)
+xx = np.linspace(pin_bottom_pos, pin_top_pos, 5)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5]) # coolant, clad out, clad in, fuel out, fuel in
@@ -38,10 +40,13 @@ mean_temp_gap = np.zeros([len(xx),2])
 
 #### **************************************************** CALCS *************************************************** ####
 test = 0
+
+burnup = 1
+
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
     yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out[i], fuel_diam_outer[i] = hot_geometry_general(
-        xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0)
+        xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0,bup=burnup)
     mean_temp_gap[i,0] = yy_hot_temp[i,2]
     mean_temp_gap[i,1] = yy_hot_temp[i,3]
     for j in range(0,len(rr)):  # radius
@@ -51,7 +56,8 @@ for i in range(0,len(xx)): # Z axis
 print(gap_vol_cold())
 vol_hot = gap_vol_hot(fuel_diam_outer, clad_diam_out)
 print(vol_hot)
-test_1, test_2 = pressure_gap_calc(vol_hot, mean_temp_gap, extra_vol=1e-6, temp_extra_vol=yy_hot_temp[0,0],clad_d_in_extra=clad_d_inner)
+test_1, test_2 = pressure_gap_calc(vol_hot, mean_temp_gap, burnup, plenum_vol=0, plenum_clad_d_in=clad_d_inner,
+                                   temp_plenum=yy_hot_temp[0, 0])
 print(f"{test_1/1e6} MPa")
 print(f"extra length {test_2} m")
 
@@ -62,7 +68,8 @@ res_x = np.zeros_like(vol_extra)
 
 c = 0
 for i in vol_extra:
-    res_y[c], res_x[c] = pressure_gap_calc(vol_hot, mean_temp_gap, extra_vol=i, temp_extra_vol=yy_hot_temp[0,0],clad_d_in_extra=clad_d_inner)
+    res_y[c], res_x[c] = pressure_gap_calc(vol_hot, mean_temp_gap, burnup, plenum_vol=i, plenum_clad_d_in=clad_d_inner,
+                                           temp_plenum=yy_hot_temp[0, 0])
     c += 1
 print(f"temp di calcolo per extra vol in K: {yy_hot_temp[0,0]}")
 plt.figure()
@@ -127,7 +134,7 @@ plt.plot(xx,yy_cold_temp[:,4], label='COLD Fuel internal',color='red', linestyle
 plt.plot(xx,yy_hot_temp[:,3], label='HOT Fuel external',color='blue')
 plt.plot(xx,yy_hot_temp[:,4], label='HOT Fuel internal',color='red')
 plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='black', linestyle='--')
-plt.plot(xx,np.ones(len(xx))*2964.92, label='Melting point of fuel (HP CONS))', color='black', linestyle='--')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup), label='Melting point of fuel (HP CONS))', color='black', linestyle='--')
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Axial temp profile of fuel pellet (inner and outer)")
@@ -138,7 +145,7 @@ plt.show()
 ## plot difference btw fuel hot and cold...
 plt.figure()
 plt.plot(xx,yy_cold_temp[:,3] - yy_hot_temp[:,3], label='Fuel external',color='blue')
-plt.plot(xx,yy_cold_temp[:,4] - yy_hot_temp[:,4], label='Fuel internal',color='red')
+plt.plot(xx,yy_cold_temp[:,4] - yy_hot_temp[:,4], label='Fuelfuel_temp_melting(burnup=burnup) internal',color='red')
 plt.xlabel("Position in [m]")
 plt.ylabel("Delta temperature in [K]")
 plt.title("Axial delta temp profile of fuel pellet (inner and outer) btw COLD and HOT")
@@ -171,6 +178,7 @@ plt.show()
 plt.figure()
 plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:], label="Temp profile")
 plt.plot(rr,np.ones(len(rr))*fuel_temp_max_suggested, label="Max suggested fuel temp", color='black', linestyle='--')
+plt.plot(rr,np.ones(len(rr))*fuel_temp_melting(burnup=burnup), label="Max suggested fuel temp", color='black', linestyle='--')
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Middle position of pin, fuel pellet temperature profile")

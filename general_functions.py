@@ -9,11 +9,13 @@ from numpy import array,pi
 from general_properties import *
 
 #### ************************************************ DOMAIN DISCR ************************************************ ####
-domain = np.linspace(pin_bottom_pos+0.085/2, pin_top_pos-0.085/2, 10)
+#domain = np.linspace(pin_bottom_pos+0.085/2, pin_top_pos-0.085/2, 10)
 
 
 
-#### ***************************** GENERAL FUNCTIONS ***************************** ####
+#### ************************************************************************************************************** ####
+#### ********************************************** GENERAL FUNCTIONS ********************************************* ####
+#### ************************************************************************************************************** ####
 
 def sy_equation_solver(sy_funct, guess):
     """
@@ -28,7 +30,6 @@ def sy_equation_solver(sy_funct, guess):
     return out.x[0] # returning solved equation (temperature)
 
 def fun_equation_solver(funct, guess):
-
     res = lambda t : funct(t) ** 2
     out = sp.optimize.minimize(res, guess, tol=10e-3)
     return out.x[0]
@@ -36,7 +37,11 @@ def fun_equation_solver(funct, guess):
 def volume_calc(d,h):
     return (h*pi*d**2)/4
 
+
+
+#### ************************************************************************************************************** ####
 #### *********************************************** POWER FUNCTIONS ********************************************** ####
+#### ************************************************************************************************************** ####
 
 ## INTERPOLATED - LINEAR POWER DISTRIBUTION FUNCTIONS ##
 def interpolated_power(z):

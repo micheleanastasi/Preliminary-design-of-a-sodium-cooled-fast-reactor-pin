@@ -36,16 +36,15 @@ plt.plot(zz, zz_r_clmn)
 plt.plot(zz,zz_r_void)
 plt.grid()
 plt.show()
-"""
+
 plt.figure(2)
 plt.plot(rr,temp_matrix[4,:])
-plt.plot(rr,temp_before[4,:])
+#plt.plot(rr,temp_before[4,:])
 plt.plot(rr,np.ones_like(rr)*fuel_temp_clmn,linestyle='--')
 plt.grid()
 plt.show()
 
-test = temp_before[4,:] - temp_matrix[4,:]
+#test = temp_before[4,:] - temp_matrix[4,:]
 plt.plot(rr,test)
 plt.grid()
 plt.show()
-"""

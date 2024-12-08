@@ -4,11 +4,14 @@ Material properties deriving from homework.pdf data
 
 import sympy as sy
 from sympy import exp
+import numpy as np
 
-#### ************************************************ DESIGN SPECS ************************************************ ####
 #### DATA GUESS ####
 clad_thickness_0 = 0.505e-3 # m - first guess
 
+#### ************************************************************************************************************** ####
+#### ************************************************ DESIGN SPECS ************************************************ ####
+#### ************************************************************************************************************** ####
 
 
 #### ************ THERMO HYDRAULICS ************* ####
@@ -42,7 +45,10 @@ power_lin_max = 38700 # W/m - linear power @ peak factor node (@ 0.3825 m over t
 
 
 
+
+#### ************************************************************************************************************** ####
 #### *********************************************** MATERIAL SPECS *********************************************** ####
+#### ************************************************************************************************************** ####
 
 ## Symbols used from sympy - conversioni temperatura
 temp = sy.Symbol('T[K]')
@@ -66,12 +72,12 @@ cool_spec_heat = 1608 - 0.7481*temp + 3.929e-4*temp ** 2
 cool_density__fahr = 954.1579 + temp_f*( temp_f*(temp_f*0.9667e-9 - 0.46e-5) - 0.1273534 )
 
 ## Coolant dyn viscosity - input in K - output in Pa*s
-cool_dyn_viscosity = exp( 813.9/temp - 2.530 ) * 0.001 # converto in Pa*s
+cool_dyn_viscosity = exp( 813.9/temp - 2.530 ) * 0.001 # converting in Pa*s
 
 ## Coolant thermal conductivity - input in K - output in W/m/K
 cool_th_cond = 110 - 0.0648*temp + 1.16e-5*temp**2
 
-## Nusselt - VERIFICA VALIDITà????
+## Nusselt
 Nu_cool = 7 + 0.025*Pe_cool**0.8
 
 
@@ -106,9 +112,13 @@ E = 17109.5
 k_0 = ( 1/(A + B*temp) + (D/(temp**2))*exp(-E/temp) )*(1-por)**2.5
 fuel_thermal_cond = 1.755 + (k_0 - 1.755)*exp( -b_up/128.75 )
 
-## melting temp
-# da aggiungere burn up dopo! ( al posto di 0 --> hp conservativa???? )
-fuel_temp_melting = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*0#*exp( -b_up/41.01 ) # burnup[then time evolution]
+## melting temp of fuel pin
+fuel_temp_melt = 2964.92 + ( (3147 - 364.85*pu_conc - 1014.15*x_om) - 2964.92 )*exp( -b_up/41.01 )
+def fuel_temp_melting(pu=0.29,xom=0,burnup=1e4):
+    out = fuel_temp_melt.subs(pu_conc,pu)
+    out = out.subs(x_om,xom)
+    out = out.subs(b_up,burnup)
+    return out
 
 ## linear thermal ref fuel
 alfa_fuel = 1e-5 # @ 298.15 K
@@ -125,7 +135,7 @@ poro_clmn = 0.05
 poro_void = 1
 
 # burnup[then time evolution]
-def th_fuel(temperature,x=0,pu=0.29,po=0.12,bup=1e4):
+def k_th_fuel(temperature,bup,x=0,pu=0.29,po=0.12):
     """
     BURN UP IN GWd/ton
     """
@@ -136,11 +146,25 @@ def th_fuel(temperature,x=0,pu=0.29,po=0.12,bup=1e4):
     output = output.subs(temp,temperature)
     return output
 
-# completare
-def th_gap(temperature,x_he=1,x_xe=0,x_kr=0,burnup=0):
 
-    x_tot = x_he + x_xe + x_kr
-    x_he_rel = x_he/x_tot
+def swelling_fuel(burnup,size):
+    """
+    BURN UP IN GWd/ton
+    """
+    return (1 + 0.0007*burnup)*size
+
+
+# completare
+def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
+    """
+    Actually dependance on Burnup (hence time) expressed by mol of gas (x_he, x_xe, x_kr)
+
+    NOTE:
+    - BURN UP IN GWd/ton
+    """
+    x_he_tot = 0.0004 + x_he
+    x_tot = x_he_tot + x_xe + x_kr
+    x_he_rel = x_he_tot/x_tot
     x_xe_rel = x_xe/x_tot
     x_kr_rel = x_kr/x_tot
 
@@ -148,5 +172,25 @@ def th_gap(temperature,x_he=1,x_xe=0,x_kr=0,burnup=0):
     k_xe = 0.72*1e-4 * temperature**0.79
     k_kr = 1.15*1e-4 * temperature**0.79
 
-    out = k_he**x_he_rel + k_xe**x_xe_rel + k_kr**x_kr_rel
+    out = k_he**x_he_rel * k_xe**x_xe_rel * k_kr**x_kr_rel
     return out
+
+
+def swelling_clad(z,burnup,temperature,diam_clad):
+    """
+    WARNING: output as diameter rather than radius
+
+    NOTE:
+    - BURN UP IN GWd/ton
+    """
+    celsTemp = temperature - 273.15
+
+    unit = pin_top_pos / 10  #0.085
+    peak_factor = np.array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498])
+    value = int(z/unit)
+
+    flux = peak_factor[value] * 6.1e15 # n/cm^2/sec
+    time = (3600*24)*365 * (burnup/52) # sec - conversion from b-up to seconds (HP constant flux)
+    sw = 1.5e-3 * exp( -2.5 * ( (celsTemp - 450)/100 )**2 ) * ( flux*time/1e22 )**2.75 # %
+    radius = diam_clad/2
+    return 2*radius * (1 + 0.01*sw)**(1/3)
