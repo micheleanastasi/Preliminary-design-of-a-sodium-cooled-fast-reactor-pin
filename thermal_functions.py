@@ -1,6 +1,7 @@
 """
 Collection of functions aimed at computing thermal properties
 """
+import numpy as np
 from mpmath import arange
 from numpy import pi,round
 from scipy.integrate import quad as integral
@@ -141,9 +142,9 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup):
     temp_clad_in = temp_cladding_inner(z,clad_d_out,clad_th)
     #gap_k = helium_thermal_cond.subs(temp,temp_clad_in)
     m_xe, m_kr, m_he = fg_prod(burnup)
- #   gap_k = k_th_gas(temp_clad_in,x_he=m_he,x_kr=m_kr,x_xe=m_xe) # (HPCONS) - AGGIORNAREEEEEEEEEEEEEEEEEEE
-  #  print(gap_k)
-    gap_k = k_th_gas(temp_clad_in)
+    gap_k = k_th_gas(temp_clad_in,x_he=m_he,x_kr=m_kr,x_xe=m_xe) # (HPCONS) - AGGIORNAREEEEEEEEEEEEEEEEEEE
+    print(gap_k)
+   # gap_k = k_th_gas(temp_clad_in)
 
     eqz_1 = temp - temp_clad_in
     #eqz_2 = power_lin_distribution(z) * delta_gap_eff / ( pi * fuel_diam_outer * helium_thermal_cond )
@@ -333,7 +334,6 @@ def gap_vol_hot(fuel_d_out_array,clad_d_out_array):
         if clad_diameter_in[i] > fuel_d_out_array[i]:
             vol = vol + unit * 0.25 * pi * (clad_diameter_in[i] ** 2 - fuel_d_out_array[i] ** 2)
     return np.sum(vol)
-
 
 def fg_prod(burnup):
     """
