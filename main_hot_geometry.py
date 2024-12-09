@@ -25,7 +25,7 @@ from thermal_functions import *
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 #xx = domain
-xx = np.linspace(pin_bottom_pos, pin_top_pos, 5)
+xx = np.linspace(pin_bottom_pos, pin_top_pos, 10)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5]) # coolant, clad out, clad in, fuel out, fuel in
@@ -46,20 +46,18 @@ burnup = 1
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
     yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out[i], fuel_diam_outer[i] = hot_geometry_general(
-        xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0,bup=burnup)
+        xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0,burnup)
     mean_temp_gap[i,0] = yy_hot_temp[i,2]
     mean_temp_gap[i,1] = yy_hot_temp[i,3]
     for j in range(0,len(rr)):  # radius
-        rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out[i],fuel_diam_outer[i],clad_thickness_0)
+        rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out[i],fuel_diam_outer[i],clad_thickness_0,burnup)
         test += 1
 
 print(gap_vol_cold())
 vol_hot = gap_vol_hot(fuel_diam_outer, clad_diam_out)
 print(vol_hot)
-test_1, test_2 = pressure_gap_calc(vol_hot, mean_temp_gap, burnup, plenum_vol=0, plenum_clad_d_in=clad_d_inner,
-                                   temp_plenum=yy_hot_temp[0, 0])
-print(f"{test_1/1e6} MPa")
-print(f"extra length {test_2} m")
+test_1, test_2 = pressure_gap_calc(vol_hot, mean_temp_gap, burnup, plenum_vol=1e-6, plenum_clad_d_in=clad_d_inner,
+                                   temp_plenum=yy_hot_temp[0, 0],print_stuff=True)
 
 ## calcolo pressione in funzione di extra volume (in termini di lunghezza)
 vol_extra = np.arange(0.5e-6,55e-6,0.5e-6)
@@ -69,7 +67,7 @@ res_x = np.zeros_like(vol_extra)
 c = 0
 for i in vol_extra:
     res_y[c], res_x[c] = pressure_gap_calc(vol_hot, mean_temp_gap, burnup, plenum_vol=i, plenum_clad_d_in=clad_d_inner,
-                                           temp_plenum=yy_hot_temp[0, 0])
+                                           temp_plenum=yy_hot_temp[0, 0],print_stuff=False)
     c += 1
 print(f"temp di calcolo per extra vol in K: {yy_hot_temp[0,0]}")
 plt.figure()

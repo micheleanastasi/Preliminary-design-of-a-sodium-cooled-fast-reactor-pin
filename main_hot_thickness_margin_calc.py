@@ -46,6 +46,8 @@ margin_fuel = np.zeros_like(clad_range)
 gap_min = np.zeros_like(clad_range)
 gap_nom = np.zeros_like(clad_range)
 
+burnup = 0
+
 
 #### **************************************************** CALCS *************************************************** ####
 k = 0 # used in for cycle below
@@ -55,7 +57,7 @@ for clad_thick_0 in clad_range: # considering a value of cladding thickness from
     for i in range(0,len(xx)): # working at z pos...
         yy_power_linear[i] = power_lin_distribution(xx[i])  # linear power calc at z pos
         yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_general(
-            xx[i], clad_d_outer, fuel_d_outer, clad_thick_0, print_status=False)
+            xx[i], clad_d_outer, fuel_d_outer, clad_thick_0, burnup, print_status=False)
         #for j in range(0,len(rr)):
         #    rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j], xx[i], clad_diam_out, fuel_diam_outer, clad_thick_0)
         #    test += 1

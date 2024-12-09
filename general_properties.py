@@ -162,7 +162,7 @@ def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
     NOTE:
     - BURN UP IN GWd/ton
     """
-    x_he_tot = 0.0004 + x_he
+    x_he_tot = 0.0004 + x_he # 4e-4 is an estimation of initial amount of moles
     x_tot = x_he_tot + x_xe + x_kr
     x_he_rel = x_he_tot/x_tot
     x_xe_rel = x_xe/x_tot

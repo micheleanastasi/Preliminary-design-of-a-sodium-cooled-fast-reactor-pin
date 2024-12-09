@@ -35,7 +35,7 @@ for i in range(0,len(xx)):
     yy_htc_local[i],yy_adim_number_cool[:,i],yy_cool_local_prop[:,i] = heat_transfer_coefficient(yy_temp_coolant[i],clad_d_outer)
     yy_temp_clad_out[i] = temp_cladding_outer(xx[i],clad_d_outer)
     yy_temp_clad_in[i] = temp_cladding_inner(xx[i],clad_d_outer,clad_thickness_0)
-    yy_temp_fuel_out[i],_ = temp_fuel_outer(xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0)
+    yy_temp_fuel_out[i],_ = temp_fuel_outer(xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0,burnup=0)
     yy_temp_fuel_in[i] = temp_fuel_max(xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0)
 
     for j in range(0,len(rr)):
