@@ -120,7 +120,7 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
 
 
 
-## TEMPERATURE PROFILE ALONG OUTER FUEL
+## TEMPERATURE PROFILE ALONG OUTER FUEL - DA COMPLETARE
 def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup):
     """
     NOTE:
@@ -141,10 +141,10 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup):
 
     temp_clad_in = temp_cladding_inner(z,clad_d_out,clad_th)
     #gap_k = helium_thermal_cond.subs(temp,temp_clad_in)
-    m_xe, m_kr, m_he = fg_prod(burnup)
-    gap_k = k_th_gas(temp_clad_in,x_he=m_he,x_kr=m_kr,x_xe=m_xe) # (HPCONS) - AGGIORNAREEEEEEEEEEEEEEEEEEE
-    print(gap_k)
-   # gap_k = k_th_gas(temp_clad_in)
+   # m_xe, m_kr, m_he = fg_prod(burnup)
+   # gap_k = k_th_gas(temp_clad_in,x_he=m_he,x_kr=m_kr,x_xe=m_xe) # (HPCONS) - AGGIORNAREEEEEEEEEEEEEEEEEEE
+  #  print(gap_k)
+    gap_k = k_th_gas(temp_clad_in)
 
     eqz_1 = temp - temp_clad_in
     #eqz_2 = power_lin_distribution(z) * delta_gap_eff / ( pi * fuel_diam_outer * helium_thermal_cond )
