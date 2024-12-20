@@ -18,12 +18,12 @@ from functions.thermal_functions import *
 
 ## ADJUSTABLE PARAMETERS
 burnup = (0,1,52,104) # GWd/ton
-res = 3
+res = 40
 extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 # thickness from general_properties.py : 0.48 mm !
 # initial gap size: 85 um !
 
-loadExisting = True
+loadExisting = False
 
 
 
@@ -100,7 +100,7 @@ else:
     np.save(os.path.join("main_numpy_saves","yy_temp_void.npy"),yy_temp_void)
 
 
-"""
+
 ## ******************************************** PLOT **************************************************************** ##
 ## Axial temp profile of fuel pellet (inner and outer) ##
 plt.figure(1,figsize=(16, 9))
@@ -344,7 +344,7 @@ plt.savefig(os.path.join("saved_figures","claddingTemp_0_1_52.png"),dpi=300, bbo
 plt.show()
 plt.close()
 
-"""
+
 
 ## pressure (extra) - calcolo pressione in funzione di extra volume (in termini di lunghezza)
 vol_extra = np.arange(0.5e-6,55e-6,0.5e-6)

@@ -178,7 +178,7 @@ def temp_fuel_max(z,clad_d_out,fuel_diam_outer,clad_th,burnup,fv=1):
 
 
 ## ALONG RADIUS - SINGLE REGION (NO RESTRUCTURING, see later)
-def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,burnup,fv=1):
+def temp_fuel_inner_radial(rr,zz,clad_d_out,fuel_diam_outer,clad_th,burnup,rVoid,tVoid):
     """
     HP:
     - no azimuthal
@@ -191,7 +191,7 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,burnup,fv=1):
     :param fuel_diam_outer: - Varying parameter! (hot geometry)
     :param clad_th: UNKNOWN --- all these parameters used to calculate delta gap
     :return: in K
-    """
+
     temp_0 = 1500 + 273.15
     fuel_radius_outer = fuel_diam_outer/2
     temp_fuel_out,_,_ = temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup) # trattino basso poiché non serve valore delta gap
@@ -199,7 +199,21 @@ def temp_fuel_inner_radial(r,z,clad_d_out,fuel_diam_outer,clad_th,burnup,fv=1):
 
     output = fun_equation_solver(res, temp_0)
     return output
+    """
+    temp_0 = 1500 + 273.15
+    temp_matrix = np.zeros([len(rr),len(zz)],dtype=float)
+    fuel_radius_outer = fuel_diam_outer/2
 
+    for j in range(0,len(zz)):
+        temp_fuel_out, _, _ = temp_fuel_outer(zz[j], clad_d_out, fuel_diam_outer, clad_th,burnup)  # trattino basso poiché non serve valore delta gap
+        for i in range(0,len(rr)):
+            if rr[i] < rVoid[i]:
+                temp_matrix[i, j] = tVoid[i]
+            else:
+                res = lambda t: t - temp_fuel_out - ((t - temp_fuel_out) * power_lin_distribution(zz[j]) / (4 * pi * integral(k_th_fuel, temp_fuel_out, t, args=(burnup,))[0])) * (1 - (rr[i] / fuel_radius_outer) ** 2)
+                temp_matrix[i,j] = fun_equation_solver(res, temp_0)
+
+    return temp_matrix
 
 
 #### ******************************************** GEOMETRIES EXPANSIONS ******************************************* ####
