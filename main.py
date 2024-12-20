@@ -13,6 +13,7 @@ PROPERTIES changing w.r.t burnup: k_fuel, Tm_fuel, k_gas
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from mpmath import linspace
 
 from functions.thermal_functions import *
 

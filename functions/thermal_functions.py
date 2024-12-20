@@ -177,7 +177,7 @@ def temp_fuel_max(z,clad_d_out,fuel_diam_outer,clad_th,burnup,fv=1):
     return out
 
 
-## ALONG RADIUS - SINGLE REGION (NO RESTRUCTURING, see later)
+## ALONG RADIUS
 def temp_fuel_inner_radial(rr,zz,clad_d_out,fuel_diam_outer,clad_th,burnup,rVoid,tVoid):
     """
     HP:
