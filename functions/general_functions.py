@@ -6,7 +6,7 @@ import numpy as np
 import scipy as sp
 from numpy import array,pi
 
-from general_properties import *
+from functions.general_properties import *
 
 #### ************************************************ DOMAIN DISCR ************************************************ ####
 #domain = np.linspace(pin_bottom_pos+0.085/2, pin_top_pos-0.085/2, 10)

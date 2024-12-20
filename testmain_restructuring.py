@@ -1,5 +1,7 @@
-
-from thermal_functions import *
+"""
+Useful script to demonstre negligible change of diameter after restructutring
+"""
+from functions.thermal_functions import *
 import matplotlib.pyplot as plt
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
@@ -18,7 +20,7 @@ burnup=0
 # r clmn and r void
 test = 0
 
-temp_matrix = np.zeros([len(zz),len(rr)])
+temp_matrix = np.zeros([len(zz),len(rr)],dtype=float)
 
 
 for i in range(0, len(zz)): # Z axis

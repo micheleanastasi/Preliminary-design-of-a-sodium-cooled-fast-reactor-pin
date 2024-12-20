@@ -7,7 +7,7 @@ from sympy import exp
 import numpy as np
 
 #### DATA GUESS ####
-clad_thickness_0 = 0.505e-3 # m - first guess
+clad_thickness_0 = 0.48e-3 # m - first guess
 
 #### ************************************************************************************************************** ####
 #### ************************************************ DESIGN SPECS ************************************************ ####
@@ -82,7 +82,7 @@ Nu_cool = 7 + 0.025*Pe_cool**0.8
 
 
 
-#### ********** CLADDING *********** ####
+#### ************************************ CLADDING ********************************* ####
 clad_temp_melting = 1673 # K
 clad_temp_max = 650 + 273.15 # K
 
@@ -95,6 +95,10 @@ clad_density = 7900*(1+ clad_eps_th )**-3
 
 ## Cladding thermal conductivity: Always Kelvin...
 clad_thermal_cond = 13.95 + 0.01163*(temp-273.15)
+
+# altro
+clad_E = 200e9 #Pa - MODIFICA
+clad_nu = 0.277 # MODIFICA
 
 #### HELIUM PROPERTIES ####
 helium_thermal_cond = 15.8e-4 * temp**0.79
@@ -126,6 +130,9 @@ alfa_fuel = 1e-5 # @ 298.15 K
 ## density
 fuel_density = 11.31e3 * 0.945 # kg/m^3
 
+fuel_E = 250e9 # Pa
+fuel_nu = 0.32
+
 ## restructuring properties
 fuel_temp_clmn = 1800 + 273.15 # K
 fuel_temp_eqax = 1600 + 273.15 # K
@@ -147,6 +154,7 @@ def k_th_fuel(temperature,bup,x=0,pu=0.29,po=0.12):
     return output
 
 
+
 def swelling_fuel(burnup,size):
     """
     BURN UP IN GWd/ton
@@ -154,7 +162,6 @@ def swelling_fuel(burnup,size):
     return (1 + 0.0007*burnup)*size
 
 
-# completare
 def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
     """
     Actually dependance on Burnup (hence time) expressed by mol of gas (x_he, x_xe, x_kr)
@@ -172,7 +179,7 @@ def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
     k_xe = 0.72*1e-4 * temperature**0.79
     k_kr = 1.15*1e-4 * temperature**0.79
 
-    out = k_he**x_he_rel
+    out = k_he**x_he_rel * k_xe**x_xe_rel * k_kr**x_kr_rel
     #out = k_he**x_he_rel
     return out
 

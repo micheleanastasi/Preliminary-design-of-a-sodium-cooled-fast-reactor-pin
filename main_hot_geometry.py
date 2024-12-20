@@ -3,12 +3,8 @@
 
 Main script to exploit functions and then computing results
 
-NOTE: still missing phenomena such as restructuring, burn-up and redistribution (the latter has minor impact though)
-    Nonetheless, up to this point everything was taken into account in a conservative approach, although some aspect should
-    be evaluated accordingly (i.e. how much is Pu redistr. negligible?)
-    But why conservative? Burn up -> inf, then lowering the values of T_fuel_melting, k_thermal, etc at minimum... moreover not still
-    considering restructuring!
-    THIS IS THE FIRST STEP
+NOTE: Nonetheless, up to this point everything was taken into account in a conservative approach, although some aspect should
+      be evaluated accordingly (i.e. how much is Pu redistr. negligible?)
 
 SO the kinetics is:
 - start: only hot geometry, no burn up (we are HERE but cons.hp: burn up --> inf)
@@ -17,9 +13,8 @@ SO the kinetics is:
 properties changing: k_fuel, Tm_fuel, ...
 """
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from thermal_functions import *
+from functions.thermal_functions import *
 
 
 
@@ -41,7 +36,8 @@ mean_temp_gap = np.zeros([len(xx),2])
 #### **************************************************** CALCS *************************************************** ####
 test = 0
 
-burnup = 1
+## choose between 0, 52, 104 GWd/ton
+burnup = 0
 
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
@@ -49,15 +45,16 @@ for i in range(0,len(xx)): # Z axis
         xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0,burnup)
     mean_temp_gap[i,0] = yy_hot_temp[i,2]
     mean_temp_gap[i,1] = yy_hot_temp[i,3]
-    for j in range(0,len(rr)):  # radius
-        rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out[i],fuel_diam_outer[i],clad_thickness_0,burnup)
-        test += 1
+   # for j in range(0,len(rr)):  # radius
+   #     rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out[i],fuel_diam_outer[i],clad_thickness_0,burnup)
+   #     test += 1
 
 print(gap_vol_cold())
 vol_hot = gap_vol_hot(fuel_diam_outer, clad_diam_out)
 print(vol_hot)
-test_1, test_2 = pressure_gap_calc(vol_hot, mean_temp_gap, burnup, plenum_vol=1e-6, plenum_clad_d_in=clad_d_inner,
-                                   temp_plenum=yy_hot_temp[0, 0],print_stuff=True)
+test_1, test_2 = pressure_gap_calc( vol_hot, mean_temp_gap, burnup, plenum_vol=0.85*0.25*pi*clad_d_inner**2,
+                                    plenum_clad_d_in=clad_d_inner, temp_plenum=yy_hot_temp[0, 0],print_stuff=True )
+
 
 ## calcolo pressione in funzione di extra volume (in termini di lunghezza)
 vol_extra = np.arange(0.5e-6,55e-6,0.5e-6)
@@ -69,7 +66,7 @@ for i in vol_extra:
     res_y[c], res_x[c] = pressure_gap_calc(vol_hot, mean_temp_gap, burnup, plenum_vol=i, plenum_clad_d_in=clad_d_inner,
                                            temp_plenum=yy_hot_temp[0, 0],print_stuff=False)
     c += 1
-print(f"temp di calcolo per extra vol in K: {yy_hot_temp[0,0]}")
+#print(f"temp di calcolo per extra vol in K: {yy_hot_temp[0,0]}")
 plt.figure()
 plt.plot(res_x*1000,res_y/1e6)
 plt.grid()
@@ -108,7 +105,6 @@ df_power.to_excel("data_hotGeo_alongZ_new.xlsx",index=False)
 
 
 #### ***************** PLOT TEMPERATURES (AXIAL) ******************* ####
-# NB no redistr, no restructuring, no burn up...
 
 ## plot coolant, cladding in and out temp for hot and cold geometries
 plt.figure()
@@ -127,10 +123,10 @@ plt.show()
 
 ## plot fuel internal and external for cold and hot geometries
 plt.figure()
-plt.plot(xx,yy_cold_temp[:,3], label='COLD Fuel external',color='blue', linestyle='--')
-plt.plot(xx,yy_cold_temp[:,4], label='COLD Fuel internal',color='red', linestyle='--')
-plt.plot(xx,yy_hot_temp[:,3], label='HOT Fuel external',color='blue')
-plt.plot(xx,yy_hot_temp[:,4], label='HOT Fuel internal',color='red')
+#plt.plot(xx,yy_cold_temp[:,3], label='COLD Fuel external',color='blue', linestyle='--')
+#plt.plot(xx,yy_cold_temp[:,4], label='COLD Fuel internal',color='red', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,3], label='Fuel external',color='blue')
+plt.plot(xx,yy_hot_temp[:,4], label='Fuel internal',color='red')
 plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='black', linestyle='--')
 plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup), label='Melting point of fuel (HP CONS))', color='black', linestyle='--')
 plt.xlabel("Position in [m]")
@@ -140,27 +136,6 @@ plt.legend()
 plt.grid()
 plt.show()
 
-## plot difference btw fuel hot and cold...
-plt.figure()
-plt.plot(xx,yy_cold_temp[:,3] - yy_hot_temp[:,3], label='Fuel external',color='blue')
-plt.plot(xx,yy_cold_temp[:,4] - yy_hot_temp[:,4], label='Fuelfuel_temp_melting(burnup=burnup) internal',color='red')
-plt.xlabel("Position in [m]")
-plt.ylabel("Delta temperature in [K]")
-plt.title("Axial delta temp profile of fuel pellet (inner and outer) btw COLD and HOT")
-plt.legend()
-plt.grid()
-plt.show()
-
-## plot difference btw cladding hot and cold...
-plt.figure()
-plt.plot(xx,yy_cold_temp[:,1] - yy_hot_temp[:,1], label='Cladding external',color='red')
-plt.plot(xx,yy_cold_temp[:,2] - yy_hot_temp[:,2], label='Cladding internal',color='orange')
-plt.xlabel("Position in [m]")
-plt.ylabel("Delta temperature in [K]")
-plt.title("Axial delta temp profile of cladding (inner and outer) btw COLD and HOT")
-plt.legend()
-plt.grid()
-plt.show()
 
 ## delta tra clad in e out (hot)
 plt.figure()
