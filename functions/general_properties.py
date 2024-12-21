@@ -43,6 +43,8 @@ fill_gas_press_in = 1e5 # Pa
 #### ************** POWER DISTRIBUTION ************* ####
 power_lin_max = 38700 # W/m - linear power @ peak factor node (@ 0.3825 m over the bottom)
 
+neu_max_flux = 6.1e15 # n/cm^2/sec
+
 
 
 

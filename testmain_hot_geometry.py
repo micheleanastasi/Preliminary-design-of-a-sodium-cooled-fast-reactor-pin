@@ -50,7 +50,7 @@ for i in range(0,len(xx)): # Z axis
    #     test += 1
 
 print(gap_vol_cold())
-vol_hot = gap_vol_hot(fuel_diam_outer, clad_diam_out)
+vol_hot = gap_vol_hot(fuel_diam_outer, clad_diam_out,yy_gap)
 print(vol_hot)
 test_1, test_2 = pressure_gap_calc( vol_hot, mean_temp_gap, burnup, plenum_vol=0.85*0.25*pi*clad_d_inner**2,
                                     plenum_clad_d_in=clad_d_inner, temp_plenum=yy_hot_temp[0, 0],print_stuff=True )
@@ -95,9 +95,9 @@ titles_power_new = ['Position in [m]', 'Linear power [W/m]',
                     'th_cond [W/m/K]']
 
 df_power = pd.DataFrame(data_hotGeo_tempZ_old, columns=titles_power_old)
-df_power.to_excel("data_hotGeo_alongZ_old.xlsx",index=False)
+df_power.to_excel(os.path.join("excels","data_hotGeo_alongZ_old.xlsx"),index=False)
 df_power = pd.DataFrame(data_hotGeo_tempZ_new, columns=titles_power_new)
-df_power.to_excel("data_hotGeo_alongZ_new.xlsx",index=False)
+df_power.to_excel(os.path.join("excels","data_hotGeo_alongZ_new.xlsx"),index=False)
 
 
 

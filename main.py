@@ -1,37 +1,37 @@
 """
-GENERAL MAIN SCRIPT
+GENERAL MAIN SCRIPT USED TO CALCULATE EVERYTHING!
+Other ones relevant: main_hot_thickness_margin_calc.py to calculate cladding thickness
 
 KINETICS:
-- start: only hot geometry, no burn up (we are HERE but cons.hp: burn up --> inf)
-- then: hot geo + restructuring
-- end: hot geo + "" + burn up effects (then swelling)
+- start: only hot geometry, no burn up
+- then: hot geo + restructuring, a bit of burnup
+- end: hot geo + "" + burn up effects (then swelling), 52 GWd/ton
+- further end: "" bur 104 GWd/ton
 
-PROPERTIES changing w.r.t burnup: k_fuel, Tm_fuel, k_gas
+PROPERTIES changing w.r.t burnup: k_fuel, Tm_fuel, k_gas ...
 """
 
 # IMPORTING
-import os
 import matplotlib.pyplot as plt
 import numpy as np
-from mpmath import linspace
-
 from functions.thermal_functions import *
 
+
 ## ADJUSTABLE PARAMETERS
-burnup = (0,1,52,104) # GWd/ton
-res = 40
-extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 # thickness from general_properties.py : 0.48 mm !
 # initial gap size: 85 um !
+burnup = (0,1,52,104) # GWd/ton - do not change, since the code is currently designed for these values...
+res = 5
+extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
 loadExisting = False
-
+## END OF ADJUSTABLE PARAMETERS
 
 
 ## DOMAIN
 xx = np.linspace(pin_bottom_pos, pin_top_pos, res)
 
-## OUTPUTS
+## OUTPUTS to be saved (as .npy)
 yy_power_linear = np.zeros_like(xx) # constant all the time!
 yy_cold_temp = np.zeros([len(xx),5,len(burnup)]) # coolant, clad out, clad in, fuel out, fuel in
 
@@ -43,15 +43,16 @@ fuel_diam_outer = np.zeros([len(xx),len(burnup)])
 
 yy_r_clmn = np.zeros([len(xx),len(burnup)])
 yy_r_void = np.zeros([len(xx),len(burnup)])
-yy_temp_void = np.zeros([len(xx),len(burnup)])
 
 vol_hot = np.zeros(len(burnup))
 pressure = np.zeros(len(burnup))
 extra_pin = np.zeros(len(burnup))
+sw_clad = np.zeros([len(xx),len(burnup)])
 
 
-
+# Check if already present
 if loadExisting:
+    yy_power_linear = np.load(os.path.join("main_numpy_saves", "yy_power_linear.npy"))
     yy_hot_temp = np.load(os.path.join("main_numpy_saves", "yy_hot_temp.npy"))
     yy_cold_temp = np.load(os.path.join("main_numpy_saves", "yy_cold_temp.npy"))
     yy_gap = np.load(os.path.join("main_numpy_saves", "yy_gap.npy"))
@@ -63,7 +64,7 @@ if loadExisting:
     extra_pin = np.load(os.path.join("main_numpy_saves", "extra_pin.npy"))
     yy_r_clmn = np.load(os.path.join("main_numpy_saves", "yy_r_clmn.npy"))
     yy_r_void = np.load(os.path.join("main_numpy_saves", "yy_r_void.npy"))
-    yy_temp_void = np.load(os.path.join("main_numpy_saves", "yy_temp_void.npy"))
+    sw_clad = np.load(os.path.join("main_numpy_saves", "sw_clad.npy"))
 else:
     ## COMPUTING AND THEN SAVING IN .NPY FORMAT
     for j in range(0,len(burnup)):
@@ -75,18 +76,19 @@ else:
             yy_cold_temp[i,:,j], yy_hot_temp[i, :,j], yy_gap[i,j], yy_properties[i,:,j], clad_diam_out[i,j], fuel_diam_outer[i,j] = hot_geometry_general(
                 xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0, burnup[j])
 
-            # RESTRUCTURING
-            _, _, yy_r_clmn[i,j], yy_r_void[i,j], yy_temp_void[i,j], _ = fuel_restructuring( xx[i], yy_hot_temp[i,3,j], yy_hot_temp[i,4,j], fuel_diam_outer[i,j],
+            # RESTRUCTURING RESULTS
+            if burnup[j] > 0.1: # GWd/ton - threshold
+                _, _, yy_r_clmn[i,j], yy_r_void[i,j], _, _ = fuel_restructuring( xx[i], yy_hot_temp[i,3,j], yy_hot_temp[i,4,j], fuel_diam_outer[i,j],
                                                                                              clad_diam_out[i,j], burnup[j] )
 
         ## PRESSURE COMPUTING
-        vol_hot[j] = gap_vol_hot(fuel_diam_outer[:,j], clad_diam_out[:,j]) # arrays as input
+        vol_hot[j] = gap_vol_hot(fuel_diam_outer[:,j], clad_diam_out[:,j],yy_gap[:,j]) # arrays as input
         # computed considering expanded clad diam (inner) as hot geometry
         vol_plenum = extra_pin_len * 0.25 * pi * clad_d_inner ** 2
         pressure[j], _ = pressure_gap_calc( vol_hot[j], yy_hot_temp[:,2:4,j], burnup[j], vol_plenum,
                                             plenum_clad_d_in=clad_d_inner, temp_plenum=yy_hot_temp[0, 0,j],print_stuff=True )
-
     # SAVING...
+    np.save(os.path.join("main_numpy_saves","yy_power_linear.npy"),yy_power_linear)
     np.save(os.path.join("main_numpy_saves","yy_hot_temp.npy"),yy_hot_temp)
     np.save(os.path.join("main_numpy_saves","yy_cold_temp.npy"),yy_cold_temp)
     np.save(os.path.join("main_numpy_saves","yy_gap.npy"),yy_gap)
@@ -98,11 +100,31 @@ else:
     np.save(os.path.join("main_numpy_saves","extra_pin.npy"),extra_pin)
     np.save(os.path.join("main_numpy_saves","yy_r_clmn.npy"),yy_r_clmn)
     np.save(os.path.join("main_numpy_saves","yy_r_void.npy"),yy_r_void)
-    np.save(os.path.join("main_numpy_saves","yy_temp_void.npy"),yy_temp_void)
+    np.save(os.path.join("main_numpy_saves","sw_clad.npy"),sw_clad)
+
+
 
 
 
 ## ******************************************** PLOT **************************************************************** ##
+
+directory = "figures"
+
+# linear power
+plt.figure(0,figsize=(16, 9))
+
+plt.plot(xx,yy_power_linear, color='blue',linestyle='-')
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Linear power in [kW/m]")
+plt.title("Axial linear power profile")
+plt.grid()
+plt.savefig(os.path.join(directory,"linPow.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
 ## Axial temp profile of fuel pellet (inner and outer) ##
 plt.figure(1,figsize=(16, 9))
 
@@ -124,7 +146,7 @@ plt.ylabel("Temperature in [K]")
 plt.title("Axial temp profile of fuel pellet (inner and outer)")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join("saved_figures","fuel_pellet_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"fuel_pellet_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -145,7 +167,7 @@ plt.ylabel("Temperature in [K]")
 plt.title("Axial temp profile of coolant and cladding (inner and outer) @ 0 GWd/ton")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join("saved_figures","coolClad_0.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"coolClad_0.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -157,16 +179,18 @@ plt.figure(3,figsize=(16, 9))
 delta_temp_cl_0 = yy_hot_temp[:,2,0] - yy_hot_temp[:,1,0]
 delta_temp_cl_1 = yy_hot_temp[:,2,1] - yy_hot_temp[:,1,1]
 delta_temp_cl_52 = yy_hot_temp[:,2,2] - yy_hot_temp[:,1,2]
+delta_temp_cl_104 = yy_hot_temp[:,2,3] - yy_hot_temp[:,1,3]
 plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 GWd/ton')
 plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 GWd/ton')
 plt.plot(xx,delta_temp_cl_52, label='Difference @ 52 GWd/ton')
+plt.plot(xx,delta_temp_cl_104, label='Difference @ 52 GWd/ton')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Axial temperature difference between cladding inner e cladding outer) w.r.t burn up")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join("saved_figures","deltaCladIn_vs_CladOut_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"deltaCladIn_vs_CladOut_0_1_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -178,6 +202,7 @@ plt.figure(4,figsize=(16, 9))
 delta_temp_cl_0 = yy_hot_temp[:,3,0] - yy_hot_temp[:,2,0]
 delta_temp_cl_1 = yy_hot_temp[:,3,1] - yy_hot_temp[:,2,1]
 delta_temp_cl_52 = yy_hot_temp[:,3,2] - yy_hot_temp[:,2,2]
+delta_temp_cl_104 = yy_hot_temp[:,3,3] - yy_hot_temp[:,2,3]
 plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 GWd/ton')
 plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 GWd/ton')
 plt.plot(xx,delta_temp_cl_52, label='Difference @ 52 GWd/ton')
@@ -187,7 +212,7 @@ plt.ylabel("Temperature in [K]")
 plt.title("Axial temperature difference between fuel outer e cladding inner w.r.t burn up")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join("saved_figures","deltaFuelOuter_vs_CladInner_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"deltaFuelOuter_vs_CladInner_0_1_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -199,6 +224,7 @@ plt.figure(5,figsize=(16, 9))
 plt.plot(xx,fuel_diam_outer[:,0]*1e3, label='Fuel diameter # 0 GWd/ton')
 plt.plot(xx,fuel_diam_outer[:,1]*1e3, label='Fuel diameter # 1 GWd/ton')
 plt.plot(xx,fuel_diam_outer[:,2]*1e3, label='Fuel diameter # 52 GWd/ton')
+plt.plot(xx,fuel_diam_outer[:,3]*1e3, label='Fuel diameter # 102 GWd/ton')
 
 plt.plot(xx,np.ones(len(xx))*fuel_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')
 
@@ -207,7 +233,7 @@ plt.ylabel("Diameter in [mm]")
 plt.title("Fuel diameter variation w.r.t burnup")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join("saved_figures","fuel_diameter_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"fuel_diameter_0_1_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -219,6 +245,7 @@ plt.figure(6,figsize=(16, 9))
 plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter # 0 GWd/ton')
 plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter # 1 GWd/ton')
 plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter # 52 GWd/ton')
+plt.plot(xx,clad_diam_out[:,3]*1e3, label='Cladding diameter # 104 GWd/ton')
 
 plt.plot(xx,np.ones(len(xx))*clad_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')
 
@@ -227,7 +254,7 @@ plt.ylabel("Diameter in [mm]")
 plt.title("Cladding diameter variation w.r.t burnup")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join("saved_figures","clad_diameter_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"clad_diameter_0_1_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -247,7 +274,7 @@ plt.ylabel("Gap size in [um]")
 plt.title("Gap size variation w.r.t burnup")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join("saved_figures","gapSize_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"gapSize_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -256,16 +283,16 @@ plt.close()
 ## radius of void and columnar
 plt.figure(8,figsize=(16, 9))
 
-plt.plot(xx,yy_r_clmn[:,0]*1e3,label="Columnar region radius")
-plt.plot(xx,yy_r_void[:,0]*1e3,label="Void region radius")
-plt.plot(xx,fuel_diam_outer[:,0]*1e3,label="Fuel pellet radius")
+plt.plot(xx,yy_r_clmn[:,1]*1e3,label="Columnar region radius")
+plt.plot(xx,yy_r_void[:,1]*1e3,label="Void region radius")
+plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius")
 
 plt.xlabel("Position along the pin in [m]")
 plt.ylabel("Radius size in [mm]")
-plt.title("Restructuring effects: radius of regions")
+plt.title("Restructuring effects: radius of regions @ 1 GWd/ton")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join("saved_figures","rVoid_rClmn_0.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"rVoid_rClmn_1.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -280,7 +307,7 @@ plt.xlabel("Burn up in [GWd/ton]")
 plt.ylabel("Pressure in [MPa]")
 plt.title("Pressure variation w.r.t burnup")
 plt.grid()
-plt.savefig(os.path.join("saved_figures","pressure_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"pressure_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -289,7 +316,9 @@ plt.close()
 max_vel = 8 # m/s
 plt.figure(10,figsize=(16, 9))
 
-plt.plot(xx,yy_properties[:,5], label='Velocity')
+plt.plot(xx,yy_properties[:,5,0], label='Velocity # 0 GWd/ton')
+plt.plot(xx,yy_properties[:,5,1], label='Velocity # 1 GWd/ton')
+plt.plot(xx,yy_properties[:,5,2], label='Velocity # 52 GWd/ton')
 plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
 
 plt.xlabel("Position [m]")
@@ -297,7 +326,7 @@ plt.ylabel("Velocity [m/s]")
 plt.title("Average velocity (over the z section)")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join("saved_figures","coolVel_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"coolVel_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -319,7 +348,7 @@ plt.ylabel("Temperature in [K]")
 plt.title("Margin variation w.r.t. Burn Up along the pin")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join("saved_figures","marginToFuelMelt_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"marginToFuelMelt_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -341,7 +370,69 @@ plt.ylabel("Temperature in [K]")
 plt.title("Cladding temperature variation w.r.t. Burn Up along the pin")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join("saved_figures","claddingTemp_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"claddingTemp_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## swelling
+for j in range(0,len(burnup)):
+    for i in range(0,len(xx)):
+        sw_clad[i,j] = swelling_clad(xx[i], burnup[j], yy_hot_temp[i,1,j], clad_diam_out[i, j] )
+
+plt.figure(13,figsize=(16, 9))
+
+plt.plot(xx,sw_clad[:,1]*1000, label='Swelling @ 1 GWd/ton')
+plt.plot(xx,sw_clad[:,2]*1000, label='Swelling @ 52 GWd/ton')
+plt.plot(res)
+
+plt.xlabel("Position along the pin in [mm]")
+plt.ylabel("Clad swelling (new diameter in")
+plt.title("Swelling of cladding w.r.t burn up")
+plt.grid()
+plt.legend()
+plt.savefig(os.path.join(directory,"cladSwelling_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## swelling function - in middle position wrt burnup
+tt = np.linspace(temp_in,clad_temp_max,100)
+sw_tt = np.zeros([len(tt),len(burnup)])
+
+for j in range(0,len(burnup)):
+    for i in range(0,len(tt)):
+        sw_tt[i,j] = swelling_clad(0.45, burnup[j], tt[i], 1 ) - 1
+
+plt.figure(14,figsize=(16, 9))
+
+plt.plot(tt,sw_tt[:,1]*100, label='Swelling @ 1 GWd/ton')
+plt.plot(tt,sw_tt[:,2]*100, label='Swelling @ 52 GWd/ton')
+
+plt.yscale("log")
+plt.xlabel("Temperature in [K]")
+plt.ylabel("Swelling in %")
+plt.title("Swelling of cladding w.r.t temperatre and burnup")
+plt.grid()
+plt.legend()
+plt.savefig(os.path.join(directory,"cladSwelling_vs_temp_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+# neutron flux
+plt.figure(15,figsize=(16, 9))
+neu = neu_max_flux * yy_power_linear/power_lin_max
+plt.plot(xx,neu, color='blue',linestyle='-')
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Neutron flux in [n/cm^2/sec]")
+plt.title("Axial neutron flux profile")
+plt.grid()
+plt.savefig(os.path.join(directory,"neuFlux.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -360,22 +451,257 @@ for j in range(0,len(burnup[0:3])):
                                                temp_plenum=yy_hot_temp[0, 0,j],print_stuff=False)
         c += 1
 
-
-plt.figure(13,figsize=(16, 9))
+plt.figure(16,figsize=(16, 9))
 
 plt.plot(res_x[:,0]*1000,res_y[:,0]/1e6,label='Pressure @ 0 GWd/ton')
 plt.plot(res_x[:,0]*1000,res_y[:,1]/1e6,label='Pressure @ 1 GWd/ton')
 plt.plot(res_x[:,0]*1000,res_y[:,2]/1e6,label='Pressure @ 52 GWd/ton')
 plt.plot(res_x[:,0]*1000,np.ones_like(res_x[:,0])*5,label='Maximum suggested pressure (5 MPa)',color='black',linestyle='--')
-
 plt.plot(res)
-plt.yscale("log")
 
+plt.yscale("log")
 plt.xlabel("Extra pin length in [mm]")
 plt.ylabel("Total pressure in cladding in [MPa]")
 plt.title("Pressure variation w.r.t burnup and extra length (volume) added")
 plt.grid()
 plt.legend()
-plt.savefig(os.path.join("saved_figures","press_vs_extraLength_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"press_vs_extraLength_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+# k gas
+tt = np.linspace(100,1000,100)
+kgas_tt = np.zeros( [len(tt),len(burnup)] )
+
+for j in range(0,len(burnup)):
+    for i in range(0,len(tt)):
+        kgas_tt[i,j] = k_th_gas(tt[i], fg_prod(burnup[j])[2] + 0.004, fg_prod(burnup[j])[0], fg_prod(burnup[j])[1])
+
+plt.figure(17,figsize=(16, 9))
+
+plt.plot(tt,kgas_tt[:,0], label='k_gas @ 0 GWd/ton')
+plt.plot(tt,kgas_tt[:,1], label='k_gas @ 1 GWd/ton')
+plt.plot(tt,kgas_tt[:,2], label='k_gas @ 52 GWd/ton')
+plt.plot(tt,kgas_tt[:,3], label='k_gas @ 104 GWd/ton')
+
+plt.xlabel("Temperature in [K]")
+plt.ylabel("Gas conductivity in [W/m/K]")
+plt.title("Gas conductivity of gap w.r.t temperature and burnup")
+plt.grid()
+plt.legend()
+plt.savefig(os.path.join(directory,"kgas_vs_temp_bup_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+# k fuel
+tt = np.linspace(100,3000,100)
+kf_tt = np.zeros( [len(tt),len(burnup)] )
+
+for j in range(0,len(burnup)):
+    for i in range(0,len(tt)):
+        kf_tt[i,j] = k_th_fuel(tt[i], burnup[j])
+
+plt.figure(18,figsize=(16, 9))
+
+plt.plot(tt,kf_tt[:,0], label='k_fuel @ 0 GWd/ton')
+plt.plot(tt,kf_tt[:,1], label='k_fuel @ 1 GWd/ton')
+plt.plot(tt,kf_tt[:,2], label='k_fuel @ 52 GWd/ton')
+plt.plot(tt,kf_tt[:,2], label='k_fuel @ 104 GWd/ton')
+
+plt.xlabel("Temperature in [K]")
+plt.ylabel("Fuel conductivity in [W/m/K]")
+plt.title("Fuel conductivity w.r.t temperature and burnup")
+plt.grid()
+plt.legend()
+plt.savefig(os.path.join(directory,"kfuel_vs_temp_bup_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+### PLOT ALREADY SEEN BUT NOW INCLUDING 104 GWd/ton ###
+
+
+## Axial temp profile of fuel pellet (inner and outer) - with 102 ##
+plt.figure(19,figsize=(16, 9))
+
+plt.plot(xx,yy_hot_temp[:,3,0], label='Fuel external @ 0 GWd/ton',color='blue',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,3,3], label='Fuel external @ 102 GWd/ton',color='blue',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 52 GWd/ton',color='blue',linestyle=':')
+
+plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel external @ 0 GWd/ton',color='red',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,4,3], label='Fuel external @ 102 GWd/ton',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel external @ 52 GWd/ton',color='red',linestyle=':')
+
+plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='gray', linestyle='--')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[0]), label='Melting point of fuel @ 0 GWd/ton)', color='black', linestyle='-')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[3]), label='Melting point of fuel @ 102 GWd/ton)', color='black', linestyle='--')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[2]), label='Melting point of fuel @ 52 GWd/ton)', color='black', linestyle=':')
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Axial temp profile of fuel pellet (inner and outer)")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"fuel_pellet_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## gap size variation w.r.t burnup 104 ##
+plt.figure(20,figsize=(16, 9))
+
+plt.plot(xx,yy_gap[:,0]*1e6, label='Gap size # 0 GWd/ton')
+plt.plot(xx,yy_gap[:,1]*1e6, label='Gap size # 1 GWd/ton')
+plt.plot(xx,yy_gap[:,2]*1e6, label='Gap size # 52 GWd/ton')
+plt.plot(xx,yy_gap[:,3]*1e6, label='Gap size # 104 GWd/ton')
+
+plt.plot(xx,np.ones(len(xx))*initial_delta_gap*1e6, label='Initial delta gap', color='black', linestyle='--')
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Gap size in [um]")
+plt.title("Gap size variation w.r.t burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"gapSize_0_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+## pressure 104 ##
+plt.figure(21,figsize=(16, 9))
+
+plt.plot(burnup[0:4],pressure[0:4]*1e-6)
+
+plt.xlabel("Burn up in [GWd/ton]")
+plt.ylabel("Pressure in [MPa]")
+plt.title("Pressure variation w.r.t burnup")
+plt.grid()
+plt.savefig(os.path.join(directory,"pressure_0_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+## velocity 104 GWd/ton
+max_vel = 8 # m/s
+plt.figure(22,figsize=(16, 9))
+
+plt.plot(xx,yy_properties[:,5,0], label='Velocity # 0 GWd/ton')
+plt.plot(xx,yy_properties[:,5,3], label='Velocity # 102 GWd/ton')
+plt.plot(xx,yy_properties[:,5,2], label='Velocity # 52 GWd/ton')
+plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
+
+plt.xlabel("Position [m]")
+plt.ylabel("Velocity [m/s]")
+plt.title("Average velocity (over the z section)")
+plt.legend()
+plt.grid()
+plt.savefig(os.path.join(directory,"coolVel_0_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+## margin
+plt.figure(23,figsize=(16, 9))
+
+margin_0 = fuel_temp_melting(burnup=burnup[0]) - yy_hot_temp[:,4,0]
+margin_1 = fuel_temp_melting(burnup=burnup[3]) - yy_hot_temp[:,4,3]
+margin_52 = fuel_temp_melting(burnup=burnup[2]) - yy_hot_temp[:,4,2]
+
+plt.plot(xx,margin_0, label='Margin @ 0 GWd/ton')
+plt.plot(xx,margin_1, label='Margin @ 102 GWd/ton')
+plt.plot(xx,margin_52, label='Margin @ 52 GWd/ton')
+
+plt.xlabel("Position [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Margin variation w.r.t. Burn Up along the pin")
+plt.legend()
+plt.grid()
+plt.savefig(os.path.join(directory,"marginToFuelMelt_0_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## cladding temperature 104
+plt.figure(24,figsize=(16, 9))
+
+plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding external temp @ 0 GWd/ton',color='blue',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding external temp @ 52 GWd/ton',color='blue',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,1,3], label='Cladding external temp @ 104 GWd/ton',color='blue',linestyle=':')
+
+plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding internal temp @ 0 GWd/ton',color='red',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding internal temp @ 52 GWd/ton',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,2,3], label='Cladding internal temp @ 104 GWd/ton',color='red',linestyle=':')
+
+plt.xlabel("Position [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Cladding temperature variation w.r.t. Burn Up along the pin")
+plt.legend()
+plt.grid()
+plt.savefig(os.path.join(directory,"claddingTemp_0_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## swelling function - in middle position wrt burnup - 104
+tt = np.linspace(temp_in,clad_temp_max,100)
+sw_tt = np.zeros([len(tt),len(burnup)])
+
+for j in range(0,len(burnup)):
+    for i in range(0,len(tt)):
+        sw_tt[i,j] = swelling_clad(0.45, burnup[j], tt[i], 1 ) - 1
+
+plt.figure(25,figsize=(16, 9))
+
+plt.plot(tt,sw_tt[:,1]*100, label='Swelling @ 1 GWd/ton')
+plt.plot(tt,sw_tt[:,2]*100, label='Swelling @ 52 GWd/ton')
+plt.plot(tt,sw_tt[:,3]*100, label='Swelling @ 104 GWd/ton')
+
+plt.yscale("log")
+plt.xlabel("Temperature in [K]")
+plt.ylabel("Swelling in %")
+plt.title("Swelling of cladding w.r.t temperatre and burnup")
+plt.grid()
+plt.legend()
+plt.savefig(os.path.join(directory,"cladSwelling_vs_temp_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+## pressure (extra) - calcolo pressione in funzione di extra volume (in termini di lunghezza)
+vol_extra = np.arange(0.5e-6,55e-6,0.5e-6)
+res_y = np.zeros([len(vol_extra),len(burnup)])
+res_x = np.zeros([len(vol_extra),len(burnup)])
+
+for j in range(0,len(burnup[0:3])):
+    c = 0
+    for i in vol_extra:
+        # calcolo considering initial coolant temperature (HP SEMPL) -- yy_hot_temp[0,0,...]
+        res_y[c,j], res_x[c,j] = pressure_gap_calc(vol_hot[j], yy_hot_temp[:,2:4,0], burnup[j], plenum_vol=i, plenum_clad_d_in=clad_d_inner,
+                                               temp_plenum=yy_hot_temp[0, 0,j],print_stuff=False)
+        c += 1
+
+plt.figure(26,figsize=(16, 9))
+
+plt.plot(res_x[:,0]*1000,res_y[:,0]/1e6,label='Pressure @ 0 GWd/ton')
+plt.plot(res_x[:,0]*1000,res_y[:,1]/1e6,label='Pressure @ 1 GWd/ton')
+plt.plot(res_x[:,0]*1000,res_y[:,2]/1e6,label='Pressure @ 52 GWd/ton')
+plt.plot(res_x[:,0]*1000,res_y[:,3]/1e6,label='Pressure @ 104 GWd/ton')
+plt.plot(res_x[:,0]*1000,np.ones_like(res_x[:,0])*5,label='Maximum suggested pressure (5 MPa)',color='black',linestyle='--')
+plt.plot(res)
+
+plt.yscale("log")
+plt.xlabel("Extra pin length in [mm]")
+plt.ylabel("Total pressure in cladding in [MPa]")
+plt.title("Pressure variation w.r.t burnup and extra length (volume) added")
+plt.grid()
+plt.legend()
+plt.savefig(os.path.join(directory,"press_vs_extraLength_0_1_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
