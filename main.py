@@ -243,7 +243,6 @@ plt.figure(6,figsize=(16, 9))
 plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter # 0 GWd/ton')
 plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter # 1 GWd/ton')
 plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter # 52 GWd/ton')
-plt.plot(xx,clad_diam_out[:,3]*1e3, label='Cladding diameter # 104 GWd/ton')
 
 plt.plot(xx,np.ones(len(xx))*clad_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')
 
@@ -252,7 +251,7 @@ plt.ylabel("Diameter in [mm]")
 plt.title("Cladding diameter variation w.r.t burnup")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join(directory,"clad_diameter_0_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"clad_diameter_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -387,10 +386,12 @@ plt.plot(res)
 
 plt.xlabel("Position along the pin in [mm]")
 plt.ylabel("Clad swelling (new diameter in")
+
 plt.title("Swelling of cladding w.r.t burn up")
+plt.ylim([6,7])
 plt.grid()
 plt.legend()
-plt.savefig(os.path.join(directory,"cladSwelling_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"cladSwelling_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -527,12 +528,13 @@ plt.close()
 plt.figure(19,figsize=(16, 9))
 
 plt.plot(xx,yy_hot_temp[:,3,0], label='Fuel external @ 0 GWd/ton',color='blue',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,3,3], label='Fuel external @ 102 GWd/ton',color='blue',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 52 GWd/ton',color='blue',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 52 GWd/ton',color='blue',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,3,3], label='Fuel external @ 102 GWd/ton',color='blue',linestyle=':')
 
 plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel external @ 0 GWd/ton',color='red',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,4,3], label='Fuel external @ 102 GWd/ton',color='red',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel external @ 52 GWd/ton',color='red',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel external @ 52 GWd/ton',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,4,3], label='Fuel external @ 102 GWd/ton',color='red',linestyle=':')
+
 
 plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='gray', linestyle='--')
 plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[0]), label='Melting point of fuel @ 0 GWd/ton)', color='black', linestyle='-')
@@ -589,8 +591,8 @@ max_vel = 8 # m/s
 plt.figure(22,figsize=(16, 9))
 
 plt.plot(xx,yy_properties[:,5,0], label='Velocity # 0 GWd/ton')
-plt.plot(xx,yy_properties[:,5,3], label='Velocity # 102 GWd/ton')
 plt.plot(xx,yy_properties[:,5,2], label='Velocity # 52 GWd/ton')
+plt.plot(xx,yy_properties[:,5,3], label='Velocity # 102 GWd/ton')
 plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
 
 plt.xlabel("Position [m]")
@@ -611,8 +613,8 @@ margin_1 = fuel_temp_melting(burnup=burnup[3]) - yy_hot_temp[:,4,3]
 margin_52 = fuel_temp_melting(burnup=burnup[2]) - yy_hot_temp[:,4,2]
 
 plt.plot(xx,margin_0, label='Margin @ 0 GWd/ton')
-plt.plot(xx,margin_1, label='Margin @ 102 GWd/ton')
 plt.plot(xx,margin_52, label='Margin @ 52 GWd/ton')
+plt.plot(xx,margin_1, label='Margin @ 102 GWd/ton')
 
 plt.xlabel("Position [m]")
 plt.ylabel("Temperature in [K]")
@@ -677,7 +679,7 @@ vol_extra = np.arange(0.5e-6,55e-6,0.5e-6)
 res_y = np.zeros([len(vol_extra),len(burnup)])
 res_x = np.zeros([len(vol_extra),len(burnup)])
 
-for j in range(0,len(burnup[0:3])):
+for j in range(0,len(burnup[0:4])):
     c = 0
     for i in vol_extra:
         # calcolo considering initial coolant temperature (HP SEMPL) -- yy_hot_temp[0,0,...]
@@ -720,9 +722,30 @@ plt.plot(xx,delta_temp_cl_104, label='Difference @ 104 GWd/ton')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
-plt.title("Axial temperature difference between cladding inner e cladding outer) w.r.t burn up")
+plt.title("Axial temperature difference between cladding inner e cladding outer w.r.t burn up")
 plt.legend()
 plt.grid()
 plt.savefig(os.path.join(directory,"deltaCladIn_vs_CladOut_0_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## Cladding diameter variation w.r.t burnup 104 ##
+plt.figure(28,figsize=(16, 9))
+
+plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter # 0 GWd/ton')
+plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter # 1 GWd/ton')
+plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter # 52 GWd/ton')
+plt.plot(xx,clad_diam_out[:,3]*1e3, label='Cladding diameter # 104 GWd/ton')
+
+plt.plot(xx,np.ones(len(xx))*clad_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Diameter in [mm]")
+plt.title("Cladding diameter variation w.r.t burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"clad_diameter_0_1_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
