@@ -24,7 +24,7 @@ burnup = (0,1,52,104) # GWd/ton - do not change, since the code is currently des
 res = 5
 extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
-loadExisting = False
+loadExisting = True
 ## END OF ADJUSTABLE PARAMETERS
 
 
@@ -179,18 +179,16 @@ plt.figure(3,figsize=(16, 9))
 delta_temp_cl_0 = yy_hot_temp[:,2,0] - yy_hot_temp[:,1,0]
 delta_temp_cl_1 = yy_hot_temp[:,2,1] - yy_hot_temp[:,1,1]
 delta_temp_cl_52 = yy_hot_temp[:,2,2] - yy_hot_temp[:,1,2]
-delta_temp_cl_104 = yy_hot_temp[:,2,3] - yy_hot_temp[:,1,3]
 plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 GWd/ton')
 plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 GWd/ton')
 plt.plot(xx,delta_temp_cl_52, label='Difference @ 52 GWd/ton')
-plt.plot(xx,delta_temp_cl_104, label='Difference @ 52 GWd/ton')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Axial temperature difference between cladding inner e cladding outer) w.r.t burn up")
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join(directory,"deltaCladIn_vs_CladOut_0_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"deltaCladIn_vs_CladOut_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -703,5 +701,28 @@ plt.title("Pressure variation w.r.t burnup and extra length (volume) added")
 plt.grid()
 plt.legend()
 plt.savefig(os.path.join(directory,"press_vs_extraLength_0_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## Axial temperature difference between cladding inner e cladding outer) w.r.t burn up ##
+plt.figure(27,figsize=(16, 9))
+
+delta_temp_cl_0 = yy_hot_temp[:,2,0] - yy_hot_temp[:,1,0]
+delta_temp_cl_1 = yy_hot_temp[:,2,1] - yy_hot_temp[:,1,1]
+delta_temp_cl_52 = yy_hot_temp[:,2,2] - yy_hot_temp[:,1,2]
+delta_temp_cl_104 = yy_hot_temp[:,2,3] - yy_hot_temp[:,1,3]
+plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 GWd/ton')
+plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 GWd/ton')
+plt.plot(xx,delta_temp_cl_52, label='Difference @ 52 GWd/ton')
+plt.plot(xx,delta_temp_cl_104, label='Difference @ 104 GWd/ton')
+
+plt.xlabel("Position in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Axial temperature difference between cladding inner e cladding outer) w.r.t burn up")
+plt.legend()
+plt.grid()
+plt.savefig(os.path.join(directory,"deltaCladIn_vs_CladOut_0_1_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()

@@ -287,8 +287,7 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
     old_diam = diam_fuel_out
 
     if radius_clmn != 0:
-        v_f = void_factor(radius_void,diam_fuel_out/2)
-        temp_void = old * v_f
+        temp_void = temp_fuel_max(z,diam_clad_out,diam_fuel_out,clad_thickness_0,burnup,void_factor(radius_void,diam_fuel_out/2))
 
         ## hot geo - only one "iteration"
         diam_fuel_out = diameter_th_exp_fuel(z, fuel_d_outer, temp_void, temp_fuel_out,burnup)
