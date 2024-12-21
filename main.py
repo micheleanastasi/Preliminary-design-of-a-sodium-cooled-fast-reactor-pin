@@ -21,7 +21,7 @@ from functions.thermal_functions import *
 # thickness from general_properties.py : 0.48 mm !
 # initial gap size: 85 um !
 burnup = (0,1,52,104) # GWd/ton - do not change, since the code is currently designed for these values...
-res = 5
+res = 41
 extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
 loadExisting = True
