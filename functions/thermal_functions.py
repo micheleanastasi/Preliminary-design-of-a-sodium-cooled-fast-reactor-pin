@@ -151,10 +151,10 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup):
         res = eqz_1 - eqz_2
         out = sy_equation_solver(res, temp_fuel_outer_guess)
     else:
-        out = temp_clad_in + 250 # approx for contact
+        out = temp_clad_in + 350 # approx for contact
 
 
-    return out, delta_gap, gap_k
+    return float(out), delta_gap, gap_k
 
 
 
@@ -246,7 +246,7 @@ def radius_void_get(r_clmn,porosity):
     return output
 
 
-def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,burnup,print_stuff=False):
+def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,burnup,interf=0,print_stuff=False):
     """
     HP CONS:
     - using fv but neglecting beneficial increase of k_Fuel in col. region...
@@ -265,7 +265,7 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
     - old array of temperatures
     """
     # creating radius_void to be used for other (higher) level of burn up, as said above
-    if 0.1 <= burnup < 1.5:
+    if 0.8 <= burnup < 1.3:
         radius_clmn = get_R_from_temp(z, diam_fuel_out, fuel_temp_clmn, temp_fuel_in, temp_fuel_out, burnup)
         radius_void = radius_void_get(radius_clmn, poro_asf)
         np.save(os.path.join("restr_saves",f"radius_clmn_{z}_burnup.npy"),radius_clmn)
@@ -274,6 +274,12 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
         try:
             radius_clmn = np.load(os.path.join("restr_saves",f"radius_clmn_{z}_burnup.npy"))
             radius_void = np.load(os.path.join("restr_saves",f"radius_void_{z}_burnup.npy"))
+
+            # reduction of void volume (here normalized per height, so area!) to make up for the contact with the cladding (HP SEMPL)
+            delta_area = pi*interf*( diam_fuel_out + interf )
+            radius_void = sqrt( radius_void**2 - delta_area/pi )
+            radius_clmn = sqrt( radius_clmn**2 - delta_area/pi )
+
         except FileNotFoundError:
             print(f"ERROR! FILE REGARDING LOW BURNUP VOID AND CLMN RADIUS NOT FOUND! First re-run with 0.1 <= burnup < 1.5, following data and"
               f"results can be inaccurate, since null value is assigned to the two radius")
@@ -287,7 +293,10 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
     old_diam = diam_fuel_out
 
     if radius_clmn != 0:
-        temp_void = temp_fuel_max(z,diam_clad_out,diam_fuel_out,clad_thickness_0,burnup,void_factor(radius_void,diam_fuel_out/2))
+        voidFactor = void_factor(radius_void,diam_fuel_out/2)
+       # temp_void = temp_fuel_max(z,diam_clad_out,diam_fuel_out,clad_thickness_0,burnup,voidFactor)
+
+        temp_void = temp_fuel_out + (temp_fuel_in - temp_fuel_out) * voidFactor
 
         ## hot geo - only one "iteration"
         diam_fuel_out = diameter_th_exp_fuel(z, fuel_d_outer, temp_void, temp_fuel_out,burnup)
@@ -298,11 +307,11 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
             print(f"Radius of clmn: {round(float(radius_clmn),6)} m, radius of void: {round(float(radius_void),6)} m")
 
     else:
-        temp_void = old
+        temp_void = temp_fuel_in
         if print_stuff:
             print("\n>NO RESTRUCTURING HAPPENED")
 
-    return diam_fuel_out, old_diam, radius_clmn, radius_void, temp_void, old
+    return diam_fuel_out, old_diam, radius_clmn, radius_void, float(temp_void), old
 
 
 
@@ -411,6 +420,9 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
     :param bup: Burnup in GWd/ton
     :return: cold temp, hot temp, minimun gap along the pin, generic properties @ hot geo, final clad outer diam, final fuel outer diam
     """
+    isOkayColdGeo = False # used to consider only cold geo if delta gap < 0 (HP CONS)
+    isFirstTime = True
+    interf = 0
     tol = 5 # kelvin - tolerance set for following iteration phase (see later in this def)
 
     # 0: temp coolant - 1: temp clad out - 2: temp clad in - 3: temp fuel out - 4: temp fuel in
@@ -446,11 +458,23 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
         # hot geo computing, starting by new geometries above
         temp_array, delta_gap = thermal_computing(z,clad_d_out_0, fuel_d_out_0, clad_thick_0, bup)
 
-        # print(prec_temp_array[4] - temp_array[4])
+        #checking to avoid code divergence if gap size is negative, running only another time though.
+        if delta_gap < 0 and isFirstTime:
+            print(f"delta former: {delta_gap*1e6}")
+            interf = delta_gap # interference computed btw fuel and cladding - see in restr. function!
+            isOkayColdGeo = True
+            fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 # contact! NB clad temps not influenced by what's inside,so same value...
+            fuel_d_out_0 = float(fuel_d_out_0) # code would crash without this conversion :(
+            temp_array, delta_gap = thermal_computing(z, clad_d_out_0, fuel_d_out_0, clad_thick_0, bup) # de facto now gap equal to zero
 
-        # prec_delta_gap = delta_gap
-        if np.abs(prec_temp_array[4] - temp_array[4]) < tol:
+
+       # print(prec_temp_array[4] - temp_array[4])
+       # print(f"temp inner {temp_array[4]}")
+       # print(f"gap: {delta_gap}")
+
+        if np.abs(prec_temp_array[4] - temp_array[4]) < tol or isOkayColdGeo:
             break
+        isFirstTime = False
     # END OF ITERATIVE COMPUTING OF TEMPERATURES #
 
 
@@ -460,19 +484,18 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
 
 
     rst_threshold = 0.1 # GWd/ton - after about 10 days...
-    if RestructOn and bup >= rst_threshold:
+    if RestructOn and bup >= rst_threshold: # put here since not so vatiation of fuel diameter following restructuring... (HP SEMPL)
         # giving diameter after a single cycle of iter following restructuring and new temperature (void factor)
-        fuel_d_out_0, _, _, _, temp_array[4], _ = fuel_restructuring(z,temp_array[3],temp_array[4],fuel_d_out_0,clad_d_out_0,bup,print_stuff=print_status)
+        _, _, _, _, temp_array[4], _ = fuel_restructuring(z,temp_array[3],temp_array[4],fuel_d_out_0,clad_d_out_0,bup,interf=interf,print_stuff=print_status)
 
-    # checking fuel diameter
-    if delta_gap < 0: # for computing purposes, it was not modified before as we may need the "negative" gap (a.k.a. interference) to see if there is contact
-        fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0
 
     ## CONSOLE PRINT SET UP here
     if print_status: # optional "progress bar" print (see input boolean)
         print(f"\n>FINAL DATA AFTER RESTR, SW, HOT GEO:")
         print(f"Fuel temp inner: HOT:{np.round(temp_array[4], 2)} K\nOld gap: {round(float(old_gap*1e6),4)} um --> New gap: {round(float(delta_gap*1e6),2)} um"
               f" ({round(float(100 * delta_gap / initial_delta_gap),2)}%)")
+        if interf != 0:
+            print(f"Interference: {interf*1e6} um")
         print(f"Fuel diam ext: {round(float(fuel_d_out_0),8)} m")
         print(f"Clad diam ext: {round(float(clad_d_out_0),8)} m\n\n\n\n")
 

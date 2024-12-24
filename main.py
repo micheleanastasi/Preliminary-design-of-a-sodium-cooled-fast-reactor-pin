@@ -21,10 +21,10 @@ from functions.thermal_functions import *
 # thickness from general_properties.py : 0.48 mm !
 # initial gap size: 85 um !
 burnup = (0,1,52,104) # GWd/ton - do not change, since the code is currently designed for these values...
-res = 41
+res = 21
 extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
-loadExisting = True
+loadExisting = False
 ## END OF ADJUSTABLE PARAMETERS
 
 
@@ -294,6 +294,27 @@ plt.show()
 plt.close()
 
 
+## radius of void and columnar
+plt.figure(8,figsize=(16, 9))
+
+plt.plot(xx,yy_r_clmn[:,1]*1e3,label="Columnar region radius @ 1 GWd/ton",color="blue",linestyle="-")
+plt.plot(xx,yy_r_void[:,1]*1e3,label="Void region radius @ 1 GWd/ton",color="red",linestyle="-")
+plt.plot(xx,yy_r_clmn[:,2]*1e3,label="Columnar region radius @ 52 GWd/ton",color="blue",linestyle=":")
+plt.plot(xx,yy_r_void[:,2]*1e3,label="Void region radius @ 52 GWd/ton",color="red",linestyle=":")
+plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius @ 1 GWd/ton",color="black",linestyle="-")
+plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius @ 52 GWd/ton",color="black",linestyle=":")
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Radius size in [mm]")
+plt.title("Restructuring effects: radius of regions @ 1 GWd/ton")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"rVoid_rClmn_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
 
 ## pressure ##
 plt.figure(9,figsize=(16, 9))
@@ -521,7 +542,7 @@ plt.show()
 plt.close()
 
 
-### PLOT ALREADY SEEN BUT NOW INCLUDING 104 GWd/ton ###
+### ******************** PLOT ALREADY SEEN BUT NOW INCLUDING 104 GWd/ton ******************** ###
 
 
 ## Axial temp profile of fuel pellet (inner and outer) - with 102 ##
