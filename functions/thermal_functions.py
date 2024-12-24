@@ -1,6 +1,8 @@
 """
 Collection of functions aimed at computing thermal properties
 """
+from multiprocessing.managers import Value
+
 import numpy as np
 from mpmath import arange
 from numpy import pi,round
@@ -277,12 +279,14 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
 
             # reduction of void volume (here normalized per height, so area!) to make up for the contact with the cladding (HP SEMPL)
             delta_area = pi*interf*( diam_fuel_out + interf )
-            print(delta_area)
-            radius_void = sqrt( radius_void**2 - delta_area/pi )
-            radius_clmn = sqrt( radius_clmn**2 - delta_area/pi )
+          #  print(delta_area)
+            try:
+                radius_void = sqrt( radius_void**2 - delta_area/pi )
+            except ValueError: # if sqrt has a negative argument...
+                radius_void = 0.1e-9
 
         except FileNotFoundError:
-            print(f"ERROR! FILE REGARDING LOW BURNUP VOID AND CLMN RADIUS NOT FOUND! First re-run with 0.1 <= burnup < 1.5, following data and"
+            print(f"ERROR! FILE REGARDING LOW BURNUP VOID AND CLMN RADIUS NOT FOUND! First re-run with 0.8 <= burnup < 1.3, following data and"
               f"results can be inaccurate, since null value is assigned to the two radius")
             radius_clmn = 0
             radius_void = 0
@@ -293,7 +297,7 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
     old = temp_fuel_max(z, diam_clad_out, diam_fuel_out, clad_thickness_0,burnup)
     old_diam = diam_fuel_out
 
-    if radius_clmn != 0:
+    if radius_clmn != 0 and radius_void != 0:
         voidFactor = void_factor(radius_void,diam_fuel_out/2)
        # temp_void = temp_fuel_max(z,diam_clad_out,diam_fuel_out,clad_thickness_0,burnup,voidFactor)
 
@@ -461,8 +465,8 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
 
         #checking to avoid code divergence if gap size is negative, running only another time though.
         if delta_gap < 0 and isFirstTime:
-            print(f"delta former: {delta_gap*1e6}")
-            interf = delta_gap # interference computed btw fuel and cladding - see in restr. function!
+            #print(f"delta former: {delta_gap*1e6}")
+            interf = -delta_gap # interference computed btw fuel and cladding - see in restr. function!
             isOkayColdGeo = True
             fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 # contact! NB clad temps not influenced by what's inside,so same value...
             fuel_d_out_0 = float(fuel_d_out_0) # code would crash without this conversion :(

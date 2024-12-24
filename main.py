@@ -20,11 +20,11 @@ from functions.thermal_functions import *
 ## ADJUSTABLE PARAMETERS
 # thickness from general_properties.py : 0.48 mm !
 # initial gap size: 85 um !
-burnup = (0,1,52,104) # GWd/ton - do not change, since the code is currently designed for these values...
+burnup = (0,1,52,104) # GWd/ton
 res = 21
 extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
-loadExisting = False
+loadExisting = True
 ## END OF ADJUSTABLE PARAMETERS
 
 
@@ -110,7 +110,7 @@ else:
 
 directory = "figures"
 
-# linear power
+## linear power ##
 plt.figure(0,figsize=(16, 9))
 
 plt.plot(xx,yy_power_linear, color='blue',linestyle='-')
@@ -152,7 +152,7 @@ plt.close()
 
 
 
-## plot coolant, cladding in and out temp for hot and cold geometries
+## plot coolant, cladding in and out temp for hot and cold geometries ##
 plt.figure(2,figsize=(16, 9))
 
 plt.plot(xx,yy_cold_temp[:,1,0], label='COLD Cladding external',color='red', linestyle='--')
@@ -544,6 +544,27 @@ plt.close()
 
 ### ******************** PLOT ALREADY SEEN BUT NOW INCLUDING 104 GWd/ton ******************** ###
 
+## Max fuel internal temperature w.r.t. burnup
+plt.figure(19,figsize=(16, 9))
+
+maxTemp = np.zeros_like(burnup,dtype=float)
+for b in range(0,len(burnup)):
+    maxTemp[b] = fuel_temp_melting(burnup[b])
+
+plt.plot(burnup,yy_hot_temp[int(res/2),3,:], label='Fuel external @ midplane',color='blue',linestyle='-')
+plt.plot(burnup,yy_hot_temp[int(res/2),4,:], label='Fuel internal @ midplane',color='red',linestyle='-')
+plt.plot(burnup,maxTemp, label='Melting point of fuel',color='black',linestyle='--')
+
+plt.xlabel("Burnup in [GWd/ton]")
+plt.ylabel("Temperature in [K]")
+plt.title("Max fuel internal temperature w.r.t. burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"fuel_pellet_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
 
 ## Axial temp profile of fuel pellet (inner and outer) - with 102 ##
 plt.figure(19,figsize=(16, 9))
@@ -552,9 +573,9 @@ plt.plot(xx,yy_hot_temp[:,3,0], label='Fuel external @ 0 GWd/ton',color='blue',l
 plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 52 GWd/ton',color='blue',linestyle='--')
 plt.plot(xx,yy_hot_temp[:,3,3], label='Fuel external @ 102 GWd/ton',color='blue',linestyle=':')
 
-plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel external @ 0 GWd/ton',color='red',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel external @ 52 GWd/ton',color='red',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,4,3], label='Fuel external @ 102 GWd/ton',color='red',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel internal @ 0 GWd/ton',color='red',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel internal @ 52 GWd/ton',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,4,3], label='Fuel internal @ 102 GWd/ton',color='red',linestyle=':')
 
 
 plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='gray', linestyle='--')
