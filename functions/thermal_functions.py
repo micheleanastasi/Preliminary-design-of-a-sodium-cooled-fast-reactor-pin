@@ -499,8 +499,8 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
         print(f"\n>FINAL DATA AFTER RESTR, SW, HOT GEO:")
         print(f"Fuel temp inner: HOT:{np.round(temp_array[4], 2)} K\nOld gap: {round(float(old_gap*1e6),4)} um --> New gap: {round(float(delta_gap*1e6),2)} um"
               f" ({round(float(100 * delta_gap / initial_delta_gap),2)}%)")
-        if interf != 0:
-            print(f"Interference: {round(float(interf*1e6),2)} um")
+        #if interf != 0:
+        #    print(f"Interference: {round(float(interf*1e6),2)} um")
         print(f"Fuel diam ext: {round(float(fuel_d_out_0*1e3),5)} mm")
         print(f"Clad diam ext: {round(float(clad_d_out_0*1e3),5)} m\n\n\n\n")
 
