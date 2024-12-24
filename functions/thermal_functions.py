@@ -283,7 +283,7 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
             try:
                 radius_void = sqrt( radius_void**2 - delta_area/pi )
             except ValueError: # if sqrt has a negative argument...
-                radius_void = 0.1e-9
+                radius_void = 0.1e-9 # =/= 0, otherwise the code would think there's not been restr. at all
 
         except FileNotFoundError:
             print(f"ERROR! FILE REGARDING LOW BURNUP VOID AND CLMN RADIUS NOT FOUND! First re-run with 0.8 <= burnup < 1.3, following data and"
@@ -500,9 +500,9 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
         print(f"Fuel temp inner: HOT:{np.round(temp_array[4], 2)} K\nOld gap: {round(float(old_gap*1e6),4)} um --> New gap: {round(float(delta_gap*1e6),2)} um"
               f" ({round(float(100 * delta_gap / initial_delta_gap),2)}%)")
         if interf != 0:
-            print(f"Interference: {interf*1e6} um")
-        print(f"Fuel diam ext: {round(float(fuel_d_out_0),8)} m")
-        print(f"Clad diam ext: {round(float(clad_d_out_0),8)} m\n\n\n\n")
+            print(f"Interference: {round(float(interf*1e6),2)} um")
+        print(f"Fuel diam ext: {round(float(fuel_d_out_0*1e3),5)} mm")
+        print(f"Clad diam ext: {round(float(clad_d_out_0*1e3),5)} m\n\n\n\n")
 
 
 
