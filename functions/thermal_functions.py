@@ -277,6 +277,7 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
 
             # reduction of void volume (here normalized per height, so area!) to make up for the contact with the cladding (HP SEMPL)
             delta_area = pi*interf*( diam_fuel_out + interf )
+            print(delta_area)
             radius_void = sqrt( radius_void**2 - delta_area/pi )
             radius_clmn = sqrt( radius_clmn**2 - delta_area/pi )
 

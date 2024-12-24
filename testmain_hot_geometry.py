@@ -20,7 +20,7 @@ from functions.thermal_functions import *
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 #xx = domain
-xx = np.linspace(pin_bottom_pos, pin_top_pos, 5)
+xx = np.linspace(pin_bottom_pos, pin_top_pos, 21)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5]) # coolant, clad out, clad in, fuel out, fuel in
