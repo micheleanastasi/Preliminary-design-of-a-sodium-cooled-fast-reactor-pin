@@ -17,6 +17,7 @@ import pandas as pd
 from functions.thermal_functions import *
 
 
+burnup = 52
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 #xx = domain
@@ -34,10 +35,6 @@ mean_temp_gap = np.zeros([len(xx),2])
 
 
 #### **************************************************** CALCS *************************************************** ####
-test = 0
-
-## choose between 0, 52, 104 GWd/ton
-burnup = 1
 
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
