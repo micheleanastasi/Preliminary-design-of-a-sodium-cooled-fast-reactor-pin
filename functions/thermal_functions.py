@@ -1,7 +1,6 @@
 """
 Collection of functions aimed at computing thermal properties
 """
-from multiprocessing.managers import Value
 
 import numpy as np
 from mpmath import arange
@@ -148,6 +147,7 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup):
     gap_k = k_th_gas(temp_clad_in,m_he,m_xe,m_kr) # (HPCONS)
 
     eqz_1 = temp - temp_clad_in
+    #print(f"gap qui: {delta_gap}")
     if delta_gap > 0:
         eqz_2 = power_lin_distribution(z) * delta_gap_eff / (pi * fuel_diam_outer * gap_k)
         res = eqz_1 - eqz_2
@@ -265,6 +265,7 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
     - radius of void region
     - temperature @ void, hence new maximum: got using temp_fuel_max + void factor
     - old array of temperatures
+    - interference if null void region eventuall
     """
     # creating radius_void to be used for other (higher) level of burn up, as said above
     if 0.8 <= burnup < 1.3:
@@ -282,8 +283,10 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
           #  print(delta_area)
             try:
                 radius_void = sqrt( radius_void**2 - delta_area/pi )
+
             except ValueError: # if sqrt has a negative argument...
                 radius_void = 0.1e-9 # =/= 0, otherwise the code would think there's not been restr. at all
+
 
         except FileNotFoundError:
             print(f"ERROR! FILE REGARDING LOW BURNUP VOID AND CLMN RADIUS NOT FOUND! First re-run with 0.8 <= burnup < 1.3, following data and"

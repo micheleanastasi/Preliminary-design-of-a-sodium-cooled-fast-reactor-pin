@@ -18,9 +18,9 @@ from functions.thermal_functions import *
 
 
 ## ADJUSTABLE PARAMETERS
-# thickness from general_properties.py : 0.48 mm !
+# thickness from general_properties.py : 0.49 mm !
 # initial gap size: 85 um !
-burnup = (0,1,52,104) # GWd/ton
+burnup = (0,6,13,26) # GWd/ton
 res = 21
 extra_pin_len = 0.75 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
@@ -68,7 +68,7 @@ if loadExisting:
 else:
     ## COMPUTING AND THEN SAVING IN .NPY FORMAT
     for j in range(0,len(burnup)):
-        print(f"\n\n\n\n*************** BURNUP = {burnup[j]} GWd/ton *****************************************************")
+        print(f"\n\n\n\n*************** BURNUP = {burnup[j]} GWd/ton ******************************************************************")
         for i in range(0,len(xx)): # Z axis
             yy_power_linear[i] = power_lin_distribution(xx[i])
 
@@ -560,7 +560,7 @@ plt.ylabel("Temperature in [K]")
 plt.title("Max fuel internal temperature w.r.t. burnup")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join(directory,"fuel_pellet_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"maxFuelTemp_vs_burnup.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
