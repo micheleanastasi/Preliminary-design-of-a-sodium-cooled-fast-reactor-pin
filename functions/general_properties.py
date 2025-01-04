@@ -106,6 +106,11 @@ clad_nu = 0.277 # MODIFICA
 helium_thermal_cond = 15.8e-4 * temp**0.79
 
 
+# constants for closed gap
+fg_C = 10*(0.0348**-0.5) # m^-0.5
+fuel_hardness = 11.2e9 # Pa
+
+
 
 #### **************** FUEL PROPERTIES ******************** ####
 fuel_temp_max_suggested = 2600 + 273.15 # K
@@ -161,7 +166,7 @@ def swelling_fuel(burnup,size):
     """
     BURN UP IN GWd/ton
     """
-    return (1 + 0.0007*burnup/3)*size # CHECK IL DIVISO TREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+    return (1 + 0.0007*burnup/3)*size
 
 
 def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
@@ -203,4 +208,4 @@ def swelling_clad(z,burnup,temperature,diam_clad):
     time = (3600*24)*365 * (burnup/52) # sec - conversion from b-up to seconds (HP constant flux)
     sw = 1.5e-3 * exp( -2.5 * ( (celsTemp - 450)/100 )**2 ) * ( flux*time/1e22 )**2.75 # %
     radius = diam_clad/2
-    return 2*radius * (1 + 0.01*sw)**(1/3)
+    return 2*radius * (1 + 0.01*sw/3)

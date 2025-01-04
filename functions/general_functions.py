@@ -117,3 +117,15 @@ def integral_power_lin_distr(z,approx=True):
         return integral_interpolated_power(z)
     else:
         return integral_step_power(z)
+
+
+def contact_pressure(fuel_r_out, clad_r_in, clad_r_out, fuel_poisson_ratio, fuel_young_modulus, clad_poisson_ratio, clad_young_modulus, fuel_r_void=0):
+    interference = fuel_r_out - clad_r_in
+
+    if interference >= 0:
+        p = (interference / clad_r_in) / (((clad_r_in ** 2 + clad_r_out ** 2) / (clad_r_out ** 2 - clad_r_in ** 2) + 1 / clad_poisson_ratio) / clad_young_modulus +
+                                          ((clad_r_in ** 2 + fuel_r_void ** 2) / (clad_r_in ** 2 - fuel_r_void ** 2) - 1 / fuel_poisson_ratio) / fuel_young_modulus)
+    else:
+        p = 0
+
+    return p

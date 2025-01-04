@@ -9,3 +9,11 @@ GUIDE:
 - functions --> folder where there are important functions used to compute everything
 - main_xxx_saves --> folders containing saved results as array
 - restr_saves --> columnar and void radius contained here, generated at low burnup and used for higher ones
+
+
+
+SOME RESULTS:
+
+thickness : 0.49 mm
+initial gap size: 85 um
+extra_pin_len = 0.75 m
