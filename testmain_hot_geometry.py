@@ -18,7 +18,7 @@ from functions.thermal_functions import *
 
 
 burnup = 52
-res = 5
+res = 11
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 
@@ -34,13 +34,14 @@ rr_temp_fuel_radial = np.zeros((len(xx),len(rr)))
 clad_diam_out = np.zeros_like(xx)
 fuel_diam_outer = np.zeros_like(xx)
 mean_temp_gap = np.zeros([len(xx),2])
+contactPressure = np.zeros_like(xx)
 
 
 #### **************************************************** CALCS *************************************************** ####
 
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
-    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out[i], fuel_diam_outer[i],_ = hot_geometry_general(
+    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out[i], fuel_diam_outer[i],contactPressure[i] = hot_geometry_general(
         xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0,burnup)
     mean_temp_gap[i,0] = yy_hot_temp[i,2]
     mean_temp_gap[i,1] = yy_hot_temp[i,3]
@@ -132,6 +133,18 @@ plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Axial temp profile of fuel pellet (inner and outer)")
 plt.legend()
+plt.grid()
+plt.show()
+
+## contact pressure
+plt.figure(19,figsize=(16, 9))
+
+plt.plot(xx,contactPressure*1e-6,label='Contact p @ 52 GWd/ton')
+
+plt.xlabel("Position in [m]")
+plt.ylabel("Pressure in [MPa]")
+plt.title("Contact pressure w.r.t. burnup")
+plt.legend(loc='best')
 plt.grid()
 plt.show()
 

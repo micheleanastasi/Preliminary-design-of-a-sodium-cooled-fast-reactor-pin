@@ -7,7 +7,7 @@ from sympy import exp
 import numpy as np
 
 #### DATA GUESS ####
-clad_thickness_0 = 0.49e-3 # m
+clad_thickness_0 = 0.48e-3 # m
 
 #### ************************************************************************************************************** ####
 #### ************************************************ DESIGN SPECS ************************************************ ####
@@ -98,9 +98,24 @@ clad_density = 7900*(1+ clad_eps_th )**-3
 ## Cladding thermal conductivity: Always Kelvin...
 clad_thermal_cond = 13.95 + 0.01163*(temp-273.15)
 
-# altro
-clad_E = 200e9 #Pa - MODIFICA
-clad_nu = 0.277 # MODIFICA
+# Clad mech prop
+#clad_E = 200e9 #Pa - MODIFICA
+#clad_nu = 0.277 # MODIFICA
+
+
+def clad_Young_modulus(temperature):
+    #   input: temperature [K]
+    #   output: [Pa]
+
+    E=(202.7-0.08167*(temperature-273.15))*1e9
+    return E
+
+def clad_Poisson_ratio(temperature):
+    #   input: temperature [K]
+    #   output: [/]
+
+    nu=0.277+6e-5*(temperature-273.15)
+    return nu
 
 #### HELIUM PROPERTIES ####
 helium_thermal_cond = 15.8e-4 * temp**0.79
@@ -137,8 +152,16 @@ alfa_fuel = 1e-5 # @ 298.15 K
 ## density
 fuel_density = 11.31e3 * 0.945 # kg/m^3
 
-fuel_E = 250e9 # Pa
+#fuel_E = 250e9 # Pa
 fuel_nu = 0.32
+
+def fuel_Young_modulus(temperature,porosity):
+    #   input: temperature [K]
+    #   porosity [/]
+    #   output: [Pa]
+    E=((22.43e4-31.19*(temperature-273.15))*(1-2.6*porosity))*1e6
+    return E
+
 
 ## restructuring properties
 fuel_temp_clmn = 1800 + 273.15 # K
@@ -187,7 +210,6 @@ def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
     k_kr = 1.15*1e-4 * temperature**0.79
 
     out = k_he**x_he_rel * k_xe**x_xe_rel * k_kr**x_kr_rel
-    #out = k_he**x_he_rel
     return out
 
 

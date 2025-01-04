@@ -17,14 +17,14 @@ import numpy as np
 from functions.thermal_functions import *
 
 
-## ADJUSTABLE PARAMETERS
+## ADJUSTABLE PARAMETERS ##
 # thickness from general_properties.py : 0.49 mm !
 # initial gap size: 85 um !
-burnup = (0,1,56,104) # GWd/ton
-res = 5
+burnup = (0,1,52,104) # GWd/ton
+res = 21
 extra_pin_len = 0.85 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
-loadExisting = False
+loadExisting = False # if True plotting already computed values
 ## END OF ADJUSTABLE PARAMETERS
 
 
@@ -171,6 +171,30 @@ plt.title("Axial temp profile of coolant and cladding (inner and outer) @ 0 GWd/
 plt.legend()
 plt.grid()
 plt.savefig(os.path.join(directory,"coolClad_0.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## Cladding temperature w.r.t burnup ##
+plt.figure(5,figsize=(16, 9))
+
+plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding ext temp @ 0 GWd/ton', color='blue', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding ext temp @ 1 GWd/ton', color='blue', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding ext temp @ 52 GWd/ton', color='blue', linestyle=':')
+
+plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding int temp @ 0 GWd/ton', color='red', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding int temp @ 1 GWd/ton', color='red', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding int temp @ 52 GWd/ton', color='red', linestyle=':')
+
+plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp', color='black', linestyle='--')
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Cladding temperature w.r.t burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"claddingTemp_0_1_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -545,12 +569,12 @@ plt.show()
 plt.close()
 
 
-## contact pressure
+## Max fuel internal temperatur
 plt.figure(19,figsize=(16, 9))
 
 maxTemp = np.zeros_like(burnup,dtype=float)
 for b in range(0,len(burnup)):
-    maxTemp[b] = fuel_temp_melting(burnup[b])
+    maxTemp[b] = fuel_temp_melting(burnup=burnup[b])
 
 plt.plot(burnup,yy_hot_temp[int(res/2),3,:], label='Fuel external @ midplane',color='blue',linestyle='-')
 plt.plot(burnup,yy_hot_temp[int(res/2),4,:], label='Fuel internal @ midplane',color='red',linestyle='-')
@@ -566,6 +590,22 @@ plt.show()
 plt.close()
 
 
+
+## Contact pressure
+plt.figure(19,figsize=(16, 9))
+
+plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 52 GWd/ton')
+
+plt.xlabel("Position in [m]")
+plt.ylabel("Pressure in [MPa]")
+plt.title("Contact pressure w.r.t. burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"contactPressure_vs_burnup.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
 ### ******************** PLOT ALREADY SEEN BUT NOW INCLUDING 104 GWd/ton ******************** ###
 
 ## Max fuel internal temperature w.r.t. burnup
@@ -573,7 +613,7 @@ plt.figure(19,figsize=(16, 9))
 
 maxTemp = np.zeros_like(burnup,dtype=float)
 for b in range(0,len(burnup)):
-    maxTemp[b] = fuel_temp_melting(burnup[b])
+    maxTemp[b] = fuel_temp_melting(burnup=burnup[b])
 
 plt.plot(burnup,yy_hot_temp[int(res/2),3,:], label='Fuel external @ midplane',color='blue',linestyle='-')
 plt.plot(burnup,yy_hot_temp[int(res/2),4,:], label='Fuel internal @ midplane',color='red',linestyle='-')
@@ -813,5 +853,47 @@ plt.title("Cladding diameter variation w.r.t burnup")
 plt.legend(loc='best')
 plt.grid()
 plt.savefig(os.path.join(directory,"clad_diameter_0_1_52_104.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+
+## Cladding temperature w.r.t burnup ##
+plt.figure(29,figsize=(16, 9))
+
+plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding ext temp @ 0 GWd/ton', color='blue', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding ext temp @ 1 GWd/ton', color='blue', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding ext temp @ 52 GWd/ton', color='blue', linestyle='-.')
+plt.plot(xx,yy_hot_temp[:,1,3], label='Cladding ext temp @ 104 GWd/ton', color='blue', linestyle=':')
+
+plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding int temp @ 0 GWd/ton', color='red', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding int temp @ 1 GWd/ton', color='red', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding int temp @ 52 GWd/ton', color='red', linestyle='-.')
+plt.plot(xx,yy_hot_temp[:,2,3], label='Cladding int temp @ 104 GWd/ton', color='red', linestyle=':')
+
+plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp', color='black', linestyle='--')
+
+plt.xlabel("Position along the pin in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Cladding temperature w.r.t burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"claddingTemp_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+## Contact pressure
+plt.figure(30,figsize=(16, 9))
+
+plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 52 GWd/ton')
+plt.plot(xx,contactPress[:,3]*1e-6,label='Contact p @ 104 GWd/ton')
+
+plt.xlabel("Position in [m]")
+plt.ylabel("Pressure in [MPa]")
+plt.title("Contact pressure w.r.t. burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"contactPressure_vs_burnup.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()

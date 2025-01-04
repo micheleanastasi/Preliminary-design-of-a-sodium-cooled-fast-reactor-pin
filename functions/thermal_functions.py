@@ -160,8 +160,6 @@ def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup,contact_pressure
 
         res = eqz_1 - eqz_2
         out = sy_equation_solver(res, temp_fuel_outer_guess)
-    #print(f"temp clad in: {temp_clad_in}")
-    #print(f"temp out: {out}")
     return float(out), delta_gap, gap_k
 
 
@@ -184,6 +182,18 @@ def temp_fuel_max(z,clad_d_out,fuel_diam_outer,clad_th,burnup,contact_pressure,f
 
     out = fun_equation_solver(res, temp_0)
     return out
+
+## PLOT RADIAL
+def temp_fuel_radial(rr,fuel_temp_out,fuel_temp_max,fuel_r_out,fuel_r_void):
+
+    a=(fuel_temp_out-fuel_temp_max)*(fuel_r_out-fuel_r_void)**-2
+    b=-2*fuel_r_void*a
+    c=fuel_temp_max+a*fuel_r_void**2
+    tempfuelradial= a * rr ** 2 + b * rr + c
+
+    tempfuelradial[rr < fuel_r_void]=max(tempfuelradial)
+
+    return tempfuelradial
 
 
 
@@ -225,6 +235,7 @@ def length_th_exp_fuel(leng,t_max):
     """
     out = ( leng + leng*alfa_fuel* ( t_max - temp_in) ) # (HP CONS)
     return out * 2
+
 
 
 
@@ -285,16 +296,6 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
         try:
             radius_clmn = np.load(os.path.join("restr_saves",f"radius_clmn_{z}_burnup.npy"))
             radius_void = np.load(os.path.join("restr_saves",f"radius_void_{z}_burnup.npy"))
-
-            # reduction of void volume (here normalized per height, so area!) to make up for the contact with the cladding (HP SEMPL)
-          #  delta_area = pi*interf*( diam_fuel_out + interf )
-          #  print(delta_area)
-           # try:
-           #     radius_void = sqrt( radius_void**2 - delta_area/pi )
-
-           # except ValueError: # if sqrt has a negative argument...
-            #    radius_void = 0.1e-9 # =/= 0, otherwise the code would think there's not been restr. at all
-
 
         except FileNotFoundError:
             print(f"ERROR! FILE REGARDING LOW BURNUP VOID AND CLMN RADIUS NOT FOUND! First re-run with 0.8 <= burnup < 1.3, following data and"
@@ -451,10 +452,7 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
     # for cladding increase of thickness! (not more than about 4 %)
     fuel_d_outer = swelling_fuel(bup, fuel_d_out_0)
     clad_d_outer = swelling_clad(z, bup, temp_array[2], clad_d_out_0)
-    #old_clad_thick_0 = clad_thick_0
-    #clad_thick_0 += (clad_d_outer - clad_d_out_0)/2 # new thickness value computed
     delta_gap = old_gap
-
 
 
     ## CONSOLE PRINT SET UP here
@@ -474,8 +472,6 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
         # always consider expansion w.r.t. initial geometry (clad_d_outer, fuel_d_outer variables)
         clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, (prec_temp_array[2]))  # with temp clad inner HP CONS
         fuel_d_out_0 = diameter_th_exp_fuel(z, fuel_d_outer, prec_temp_array[4], prec_temp_array[3],bup)
-        # !!!
-        # clad_thick_0 = diameter_th_exp_cladding(clad_thickness_0,(prec_temp_array[2]))
         clad_d_in_0 = clad_d_out_0 - 2 * clad_thick_0
 
         # loading r_void already computed if burnup higher than the below threshold (r_void used to compute contact pressure)
@@ -483,41 +479,47 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
             fuel_r_void = np.zeros(z.shape)
         else:
             fuel_r_void = np.load(os.path.join("restr_saves",f"radius_void_{z}_burnup.npy"))
-        fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E,clad_nu, clad_E, fuel_r_void)
+
+        # computing contact pressure
+        fuel_E = fuel_Young_modulus(prec_temp_array[3],poro_asf)
+        clad_E = clad_Young_modulus(prec_temp_array[2])
+        clad_nu = clad_Poisson_ratio(prec_temp_array[2])
+        fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E, clad_nu, clad_E, fuel_r_void)
 
         # hot geo computing, starting by new geometries above
         temp_array, delta_gap = thermal_computing(z,clad_d_out_0, fuel_d_out_0, clad_thick_0, bup,fc_contact_pressure)
 
 
-        #checking to avoid code divergence if gap size is negative, running only another time though.
-       # if iter > 100:
-       #     isSurelyNegative = True
+        #checking to avoid code divergence if gap size is negative, running only another time though
+        #happening if gap value, got from iteration, oscillating around zero (from pos to neg and vice versa) for every iter
+        if delta_gap < 0 and iter > 30:
+            isOkayColdGeo = True
+            fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 # contact! NB clad temps not influenced by what's inside,so same value... then delta gap null!
+            fuel_d_out_0 = float(fuel_d_out_0) # code would crash without this conversion :(
+            temp_array, delta_gap = thermal_computing(z, clad_d_out_0, fuel_d_out_0, clad_thick_0, bup,fc_contact_pressure) # de facto now gap equal to zero for thermal calc but not for mech
+            delta_gap = -0.01e-6 # m - small value to avoid possible problems
 
-       # if delta_gap < 0 and (isFirstTime or isSurelyNegative):
-       #     #print(f"delta former: {delta_gap*1e6}")
-       #     interf = -delta_gap # interference computed btw fuel and cladding - see in restr. function!
-       #     isOkayColdGeo = True
-       #     fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 # contact! NB clad temps not influenced by what's inside,so same value...
-       #     fuel_d_out_0 = float(fuel_d_out_0) # code would crash without this conversion :(
-       #     temp_array, delta_gap = thermal_computing(z, clad_d_out_0, fuel_d_out_0, clad_thick_0, bup,fc_contact_pressure) # de facto now gap equal to zero
-
-        print("*****************")
-        print(prec_temp_array[4] - temp_array[4])
-        print(f"temp inner {temp_array[4]}")
-        print(f"gap: {delta_gap}")
-        print("*****************")
+        print(f"**convergence: {prec_temp_array[4] - temp_array[4]}")
+        print(f"*temp inner {temp_array[4]}")
+        print(f"*gap: {delta_gap}")
 
         if np.abs(prec_temp_array[4] - temp_array[4]) < tol or isOkayColdGeo:
             break
         isFirstTime = False
     # END OF ITERATIVE COMPUTING OF TEMPERATURES #
 
+    # if gap negative assessed, then get as output fuel diam out == fuel clad in, whereas gap negative used for thermal computing (see fuel_outer_temp function)
+    if delta_gap < 0 and iter <= 30:
+        interf = -delta_gap
+        fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0  # contact! NB clad temps not influenced by what's inside,so same value... then delta gap null!
+        fuel_d_out_0 = float(fuel_d_out_0)  # code would crash without this conversion :(
+
 
     # preparing other stuff to be exported by the function
     yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coefficient(temp_array[0], clad_d_out_0)  # new
     other = np.array(list([yy_htc_loc]) + list(yy_adim_num_cool) + list(yy_cool_loc_prop))
 
-
+    # considering now restructuring
     rst_threshold = 0.1 # GWd/ton - after about 10 days...
     if RestructOn and bup >= rst_threshold: # put here since not so vatiation of fuel diameter following restructuring... (HP SEMPL)
         # giving diameter after a single cycle of iter following restructuring and new temperature (void factor)
@@ -530,11 +532,9 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
         print(f"Fuel temp inner: HOT:{np.round(temp_array[4], 2)} K\nOld gap: {round(float(old_gap*1e6),4)} um --> New gap: {round(float(delta_gap*1e6),2)} um"
               f" ({round(float(100 * delta_gap / initial_delta_gap),2)}%)")
         if delta_gap < 0:
-            print(f"Interference: {round(float(-delta_gap)*1e6,2)} um")
+            print(f"Interference: {round(float(-interf)*1e6,2)} um")
         print(f"Fuel diam ext: {round(float(fuel_d_out_0*1e3),5)} mm")
         print(f"Clad diam ext: {round(float(clad_d_out_0*1e3),5)} m\n\n\n\n")
-
-
 
     return old_temp, temp_array, delta_gap, other, clad_d_out_0, fuel_d_out_0, fc_contact_pressure
 
