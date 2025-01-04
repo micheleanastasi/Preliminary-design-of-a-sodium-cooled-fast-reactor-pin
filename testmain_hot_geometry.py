@@ -18,10 +18,12 @@ from functions.thermal_functions import *
 
 
 burnup = 52
+res = 5
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
-#xx = domain
-xx = np.linspace(pin_bottom_pos, pin_top_pos, 11)
+
+
+xx = np.linspace(pin_bottom_pos, pin_top_pos, res)
 rr = np.linspace(0,fuel_d_outer/2,10)
 yy_power_linear = np.zeros_like(xx)
 yy_cold_temp = np.zeros([len(xx),5]) # coolant, clad out, clad in, fuel out, fuel in
@@ -38,7 +40,7 @@ mean_temp_gap = np.zeros([len(xx),2])
 
 for i in range(0,len(xx)): # Z axis
     yy_power_linear[i] = power_lin_distribution(xx[i])
-    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out[i], fuel_diam_outer[i] = hot_geometry_general(
+    yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:], clad_diam_out[i], fuel_diam_outer[i],_ = hot_geometry_general(
         xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0,burnup)
     mean_temp_gap[i,0] = yy_hot_temp[i,2]
     mean_temp_gap[i,1] = yy_hot_temp[i,3]

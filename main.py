@@ -21,7 +21,7 @@ from functions.thermal_functions import *
 # thickness from general_properties.py : 0.49 mm !
 # initial gap size: 85 um !
 burnup = (0,1,56,104) # GWd/ton
-res = 11
+res = 5
 extra_pin_len = 0.85 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
 loadExisting = False
@@ -48,6 +48,7 @@ vol_hot = np.zeros(len(burnup))
 pressure = np.zeros(len(burnup))
 extra_pin = np.zeros(len(burnup))
 sw_clad = np.zeros([len(xx),len(burnup)])
+contactPress = np.zeros([len(xx),len(burnup)])
 
 
 # Check if already present
@@ -65,6 +66,7 @@ if loadExisting:
     yy_r_clmn = np.load(os.path.join("main_numpy_saves", "yy_r_clmn.npy"))
     yy_r_void = np.load(os.path.join("main_numpy_saves", "yy_r_void.npy"))
     sw_clad = np.load(os.path.join("main_numpy_saves", "sw_clad.npy"))
+    contactPress = np.load(os.path.join("main_numpy_saves", "contactPress.npy"))
 else:
     ## COMPUTING AND THEN SAVING IN .NPY FORMAT
     for j in range(0,len(burnup)):
@@ -73,7 +75,7 @@ else:
             yy_power_linear[i] = power_lin_distribution(xx[i])
 
             # COMPUTING TEMPS, GAPS, NEW CLAD AND FUEL DIAMETERS
-            yy_cold_temp[i,:,j], yy_hot_temp[i, :,j], yy_gap[i,j], yy_properties[i,:,j], clad_diam_out[i,j], fuel_diam_outer[i,j] = hot_geometry_general(
+            yy_cold_temp[i,:,j], yy_hot_temp[i, :,j], yy_gap[i,j], yy_properties[i,:,j], clad_diam_out[i,j], fuel_diam_outer[i,j],contactPress[i,j] = hot_geometry_general(
                 xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0, burnup[j])
 
             # RESTRUCTURING RESULTS
@@ -101,6 +103,7 @@ else:
     np.save(os.path.join("main_numpy_saves","yy_r_clmn.npy"),yy_r_clmn)
     np.save(os.path.join("main_numpy_saves","yy_r_void.npy"),yy_r_void)
     np.save(os.path.join("main_numpy_saves","sw_clad.npy"),sw_clad)
+    np.save(os.path.join("main_numpy_saves", "contactPress.npy"),contactPress)
 
 
 
@@ -538,6 +541,27 @@ plt.title("Fuel conductivity w.r.t temperature and burnup")
 plt.grid()
 plt.legend()
 plt.savefig(os.path.join(directory,"kfuel_vs_temp_bup_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+## contact pressure
+plt.figure(19,figsize=(16, 9))
+
+maxTemp = np.zeros_like(burnup,dtype=float)
+for b in range(0,len(burnup)):
+    maxTemp[b] = fuel_temp_melting(burnup[b])
+
+plt.plot(burnup,yy_hot_temp[int(res/2),3,:], label='Fuel external @ midplane',color='blue',linestyle='-')
+plt.plot(burnup,yy_hot_temp[int(res/2),4,:], label='Fuel internal @ midplane',color='red',linestyle='-')
+plt.plot(burnup,maxTemp, label='Melting point of fuel',color='black',linestyle='--')
+
+plt.xlabel("Burnup in [GWd/ton]")
+plt.ylabel("Temperature in [K]")
+plt.title("Max fuel internal temperature w.r.t. burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"maxFuelTemp_vs_burnup.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 

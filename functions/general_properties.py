@@ -166,7 +166,7 @@ def swelling_fuel(burnup,size):
     """
     BURN UP IN GWd/ton
     """
-    return (1 + 0.0007*burnup/3)*size
+    return (1 + 0.0007*burnup)*size
 
 
 def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):

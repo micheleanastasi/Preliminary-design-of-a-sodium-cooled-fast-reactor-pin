@@ -45,7 +45,7 @@ else:
     for clad_thick_0 in clad_range: # considering a value of cladding thickness from the array above...
         # COMPUTING
         for i in range(0,len(xx)): # working at z pos...
-            yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:],clad_diam_out,fuel_diam_outer = hot_geometry_general(
+            yy_cold_temp[i,:], yy_hot_temp[i,:], yy_gap[i], yy_properties[i,:],clad_diam_out,fuel_diam_outer,_ = hot_geometry_general(
                 xx[i], clad_d_outer, fuel_d_outer, clad_thick_0, burnup, print_status=False)
 
         gap_nom[k] = ( clad_d_outer/2 - clad_thick_0 - fuel_d_outer/2 )*1e6
