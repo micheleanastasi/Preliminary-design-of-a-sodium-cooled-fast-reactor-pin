@@ -208,17 +208,23 @@ def diameter_th_exp_cladding(diam,t_max):
     return diam + clad_exp*diam
 
 
-def diameter_th_exp_fuel(z,diam,t_max, t_min, burnup):
+def diameter_th_exp_fuel(z,diam,t_max, t_min, burnup,diam_void=0):
     """
     CONSIDERING THERMAL EXPANSION
-    By equation: new_rad = old_rad + alfa * Int(A-Br^2, btw 0 and old rad)
+    By equation: new_rad = old_rad + alfa * Int(A-Br^2, btw diam_Void/zero and old rad)
     OSS burn up in GWd/ton(HM)
     """
     radius = diam/2
     k_integ = integral(k_th_fuel, t_min, t_max, args=(burnup,))[0]
     A = t_min + (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ )
     B = (t_max-t_min)*power_lin_distribution(z)/( 4*pi*k_integ*radius**2 )
-    out = ( radius + alfa_fuel * ( A*radius - (B/3)*radius**3 ) )
+
+    fun = lambda r : A - B * r**2
+    integ = integral(fun,diam_void/2,diam/2)[0]
+    out = radius + alfa_fuel * integ
+
+    #out = ( radius + alfa_fuel * ( A*radius - (B/3)*radius**3 ) )
+
     return out * 2
 
 
@@ -469,16 +475,16 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
         iter += 1
         prec_temp_array = temp_array.copy()  # to be used to evaluate when exiting from the while below...
 
-        # always consider expansion w.r.t. initial geometry (clad_d_outer, fuel_d_outer variables)
-        clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, (prec_temp_array[2]))  # with temp clad inner HP CONS
-        fuel_d_out_0 = diameter_th_exp_fuel(z, fuel_d_outer, prec_temp_array[4], prec_temp_array[3],bup)
-        clad_d_in_0 = clad_d_out_0 - 2 * clad_thick_0
-
         # loading r_void already computed if burnup higher than the below threshold (r_void used to compute contact pressure)
         if bup < 1.3:
             fuel_r_void = np.zeros(z.shape)
         else:
             fuel_r_void = np.load(os.path.join("restr_saves",f"radius_void_{z}_burnup.npy"))
+
+        # always consider expansion w.r.t. initial geometry (clad_d_outer, fuel_d_outer variables)
+        clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, (prec_temp_array[2]))  # with temp clad inner HP CONS
+        fuel_d_out_0 = diameter_th_exp_fuel(z, fuel_d_outer, prec_temp_array[4], prec_temp_array[3],bup)
+        clad_d_in_0 = clad_d_out_0 - 2 * clad_thick_0
 
         # computing contact pressure
         fuel_E = fuel_Young_modulus(prec_temp_array[3],poro_asf)
@@ -519,11 +525,11 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
     yy_htc_loc, yy_adim_num_cool, yy_cool_loc_prop = heat_transfer_coefficient(temp_array[0], clad_d_out_0)  # new
     other = np.array(list([yy_htc_loc]) + list(yy_adim_num_cool) + list(yy_cool_loc_prop))
 
-    # considering now restructuring
+    # considering now restructuring - and then uploading delta gap
     rst_threshold = 0.1 # GWd/ton - after about 10 days...
-    if RestructOn and bup >= rst_threshold: # put here since not so vatiation of fuel diameter following restructuring... (HP SEMPL)
+    if RestructOn and bup >= rst_threshold: # put here since not so variation of fuel diameter following restructuring... (HP SEMPL)
         # giving diameter after a single cycle of iter following restructuring and new temperature (void factor)
-        _, _, _, _, temp_array[4], _ = fuel_restructuring(z,temp_array[3],temp_array[4],fuel_d_out_0,clad_d_out_0,bup,print_stuff=print_status)
+        fuel_d_out_0, _, _, _, temp_array[4], _ = fuel_restructuring(z,temp_array[3],temp_array[4],fuel_d_out_0,clad_d_out_0,bup,print_stuff=print_status)
 
 
     ## CONSOLE PRINT SET UP here
