@@ -7,7 +7,7 @@ from sympy import exp
 import numpy as np
 
 #### DATA GUESS ####
-clad_thickness_0 = 0.48e-3 # m
+clad_thickness_0 = 0.47e-3 # m
 
 #### ************************************************************************************************************** ####
 #### ************************************************ DESIGN SPECS ************************************************ ####
@@ -99,10 +99,6 @@ clad_density = 7900*(1+ clad_eps_th )**-3
 clad_thermal_cond = 13.95 + 0.01163*(temp-273.15)
 
 # Clad mech prop
-#clad_E = 200e9 #Pa - MODIFICA
-#clad_nu = 0.277 # MODIFICA
-
-
 def clad_Young_modulus(temperature):
     #   input: temperature [K]
     #   output: [Pa]
@@ -171,7 +167,7 @@ poro_asf = 0.12
 poro_clmn = 0.05
 poro_void = 1
 
-# burnup[then time evolution]
+# (HP SEMPL) considering maximum burnup (i.e. at midplane)
 def k_th_fuel(temperature,bup,x=0,pu=0.29,po=0.12):
     """
     BURN UP IN GWd/ton
@@ -185,11 +181,13 @@ def k_th_fuel(temperature,bup,x=0,pu=0.29,po=0.12):
 
 
 
-def swelling_fuel(burnup,size):
+def swelling_fuel(z,burnup,size):
     """
     BURN UP IN GWd/ton
     """
-    return (1 + 0.0007*burnup)*size
+    bup = peak_factor_calc(z)*burnup
+
+    return (1 + 0.0007*bup)*size
 
 
 def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
@@ -222,12 +220,27 @@ def swelling_clad(z,burnup,temperature,diam_clad):
     """
     celsTemp = temperature - 273.15
 
+    #unit = pin_top_pos / 10  #0.085
+    #peak_factor = np.array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498])
+    #value = int(z/unit)
+    #flux = peak_factor[value] * 6.1e15 # n/cm^2/sec
+
+    flux = peak_factor_calc(z) * 6.1e15 # n/cm^2/sec
+
+    time = (3600*24)*365 * (burnup/52) # sec - conversion from b-up to seconds (HP constant flux)
+    #sw = 1.5e-3 * exp( -2.5 * ( (celsTemp - 450)/100 )**2 ) * ( flux*time/1e22 )**2.75 # %
+    sw = 1.3e-5 * exp( -( (celsTemp-490)/100 )**2 ) * ( flux*time/1e22 )**3.9 # USING THE BEST ESTIMATION (SEEN AT LESSON)
+    radius = diam_clad/2
+    return 2*radius * (1 + 0.01*sw/3)
+
+
+## FUNCTION USEFUL ABOVE
+def peak_factor_calc(z):
+    """
+    Getting peak factor according to position along the pin
+    """
     unit = pin_top_pos / 10  #0.085
     peak_factor = np.array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498])
     value = int(z/unit)
 
-    flux = peak_factor[value] * 6.1e15 # n/cm^2/sec
-    time = (3600*24)*365 * (burnup/52) # sec - conversion from b-up to seconds (HP constant flux)
-    sw = 1.5e-3 * exp( -2.5 * ( (celsTemp - 450)/100 )**2 ) * ( flux*time/1e22 )**2.75 # %
-    radius = diam_clad/2
-    return 2*radius * (1 + 0.01*sw/3)
+    return peak_factor[value]

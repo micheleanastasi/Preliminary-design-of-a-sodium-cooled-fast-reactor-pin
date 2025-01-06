@@ -17,7 +17,7 @@ import pandas as pd
 from functions.thermal_functions import *
 
 
-burnup = 1
+burnup = 52*2
 res = 11
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
@@ -49,9 +49,9 @@ for i in range(0,len(xx)): # Z axis
    #     rr_temp_fuel_radial[i,j] = temp_fuel_inner_radial(rr[j],xx[i],clad_diam_out[i],fuel_diam_outer[i],clad_thickness_0,burnup)
    #     test += 1
 
-print(gap_vol_cold())
+#print(gap_vol_cold())
 vol_hot = gap_vol_hot(fuel_diam_outer, clad_diam_out,yy_gap)
-print(vol_hot)
+#print(vol_hot)
 test_1, test_2 = pressure_gap_calc( vol_hot, mean_temp_gap, burnup, plenum_vol=0.85*0.25*pi*clad_d_inner**2,
                                     plenum_clad_d_in=clad_d_inner, temp_plenum=yy_hot_temp[0, 0],print_stuff=True )
 
