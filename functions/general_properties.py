@@ -234,6 +234,31 @@ def swelling_clad(z,burnup,temperature,diam_clad):
     return 2*radius * (1 + 0.01*sw/3)
 
 
+def yield_strength_cladding(T):
+    """
+        input: T [°C]
+    """
+    if T < 600:
+        return 555.5e6 - 0.25 * T
+    elif T <= 1000:
+        return 405.5e6 - 0.775 * (T - 600)
+    else:
+        return 345.5e6 - 0.25 * T
+
+def UTS_cladding(T):
+    """
+        input: T [°C]
+    """
+
+
+    if T < 600:
+        return 700.5e6 - 0.3215 * T
+    elif T <= 1000:
+        return 512.5e6 - 0.969 * (T - 600)
+    else:
+        return 437.5e6 - 0.3125 * T
+
+
 ## FUNCTION USEFUL ABOVE
 def peak_factor_calc(z):
     """
@@ -244,3 +269,5 @@ def peak_factor_calc(z):
     value = int(z/unit)
 
     return peak_factor[value]
+
+

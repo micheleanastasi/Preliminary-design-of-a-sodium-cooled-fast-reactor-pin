@@ -519,14 +519,18 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
             _, _, radClmn, radVoidGuess, temp_array[4], oldMaxTemp = fuel_restructuring(z, temp_array[3], temp_array[4], fuel_d_out_0, clad_d_out_0, bup, print_stuff=False)
 
 
-
+        # ITERATION SAFETY
         conv = np.abs(prec_temp_array[4] - temp_array[4])
         #checking to avoid code divergence (or blocked convergence) happening when gap size is negative, running only another time though
         #happening if gap value, got from iteration, oscillating around zero (from pos to neg and vice versa) for every iter
-        if (delta_gap < 0 and iter > 20) or (delta_gap < 0 and np.abs(prec_conv-conv)<1):
+        divergenceSafety = np.abs(conv) > np.abs(prec_conv) and isFirstTime==False
+        if (delta_gap < 0 and iter > 20) or (delta_gap < 0 and np.abs(prec_conv-conv)<1) or divergenceSafety:
             isOkayColdGeo = True
             fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 # contact! NB clad temps not influenced by what's inside,so same value... then delta gap null!
             fuel_d_out_0 = float(fuel_d_out_0) # code would crash without this conversion :(
+            fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E,clad_nu, clad_E, fuel_r_void)
+            if divergenceSafety:
+                delta_gap = 0
             temp_array, _ = thermal_computing(z, clad_d_out_0, fuel_d_out_0, clad_thick_0, bup,fc_contact_pressure) # de facto now gap equal to zero for thermal calc but not for mech
             #delta_gap = -0.001e-6 # m - small value to avoid possible problems
         if iter == 10:

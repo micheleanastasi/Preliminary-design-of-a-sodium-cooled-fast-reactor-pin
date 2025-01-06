@@ -24,7 +24,7 @@ burnup = (0,1,52,104) # GWd/ton
 res = 11
 extra_pin_len = 0.85 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
-loadExisting = True # if True plotting already computed values
+loadExisting = False # if True plotting already computed values
 ## END OF ADJUSTABLE PARAMETERS
 
 
