@@ -17,7 +17,7 @@ import pandas as pd
 from functions.thermal_functions import *
 
 
-burnup = 104
+burnup = 64
 res = 11
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####

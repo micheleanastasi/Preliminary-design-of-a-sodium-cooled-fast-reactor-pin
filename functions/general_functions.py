@@ -34,6 +34,13 @@ def volume_calc(d,h):
     return (h*pi*d**2)/4
 
 
+def burnup_calc(days):
+    vol = 0.25*3.1415*pin_column_height*fuel_d_outer**2
+    mass = fuel_density * vol
+    factor = power_lin_max*pin_column_height/mass
+    return factor*days
+
+
 
 #### ************************************************************************************************************** ####
 #### *********************************************** POWER FUNCTIONS ********************************************** ####

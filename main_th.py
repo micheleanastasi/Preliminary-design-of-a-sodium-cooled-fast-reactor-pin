@@ -5,27 +5,30 @@ Other ones relevant: main_hot_thickness_margin_calc.py to calculate cladding thi
 KINETICS:
 - start: only hot geometry, no burn up
 - then: hot geo + restructuring, a bit of burnup
-- end: hot geo + "" + burn up effects (then swelling), 52 GWd/ton
-- further end: "" bur 104 GWd/ton
+- end: hot geo + "" + burn up effects (then swelling), 1 year
+- further end: "" bur 2 years
 
 PROPERTIES changing w.r.t burnup: k_fuel, Tm_fuel, k_gas ...
 """
 
-# IMPORTING
+## IMPORTING
 import matplotlib.pyplot as plt
 import numpy as np
 from functions.thermal_functions import *
 
 
-## ADJUSTABLE PARAMETERS ##
-# thickness from general_properties.py : 0.48 mm !
-# initial gap size: 85 um !
-burnup = (0,1,52,104) # GWd/ton
-res = 11
-extra_pin_len = 0.85 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
-
+## CONFIG
 loadExisting = False # if True plotting already computed values
-## END OF ADJUSTABLE PARAMETERS
+
+# thickness from general_properties.py : 0.53 mm
+extra_pin_len = 0.90 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
+#time = (0,7,365,730) # days
+#burnup = (0,1,56,104) # GWd/ton
+burnup = (0,1,64,128) # GWd/tonHM
+res = 11
+
+
+## END OF CONFIG
 
 
 ## DOMAIN
@@ -70,7 +73,7 @@ if loadExisting:
 else:
     ## COMPUTING AND THEN SAVING IN .NPY FORMAT
     for j in range(0,len(burnup)):
-        print(f"\n\n\n\n*************** BURNUP = {burnup[j]} GWd/ton ******************************************************************")
+        print(f"\n\n\n\n*************** BURNUP = {np.round(burnup[j],2)} GWd/ton ******************************************************************")
         for i in range(0,len(xx)): # Z axis
             yy_power_linear[i] = power_lin_distribution(xx[i])
 
@@ -131,18 +134,18 @@ plt.close()
 ## Axial temp profile of fuel pellet (inner and outer) ##
 plt.figure(1,figsize=(16, 9))
 
-plt.plot(xx,yy_hot_temp[:,3,0], label='Fuel external @ 0 GWd/ton',color='blue',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,3,1], label='Fuel external @ 1 GWd/ton',color='blue',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 52 GWd/ton',color='blue',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,3,0], label='Fuel external @ 0 days',color='blue',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,3,1], label='Fuel external @ 1 week',color='blue',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 1 year',color='blue',linestyle=':')
 
-plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel external @ 0 GWd/ton',color='red',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,4,1], label='Fuel external @ 1 GWd/ton',color='red',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel external @ 52 GWd/ton',color='red',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel internal @ 0 days',color='red',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,4,1], label='Fuel internal @ 1 week',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel internal @ 1 year',color='red',linestyle=':')
 
 plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='gray', linestyle='--')
-plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[0]), label='Melting point of fuel @ 0 GWd/ton)', color='black', linestyle='-')
-plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[1]), label='Melting point of fuel @ 1 GWd/ton)', color='black', linestyle='--')
-plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[2]), label='Melting point of fuel @ 52 GWd/ton)', color='black', linestyle=':')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[0]), label='Melting point of fuel @ 0 days)', color='black', linestyle='-')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[1]), label='Melting point of fuel @ 1 week)', color='black', linestyle='--')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[2]), label='Melting point of fuel @ 1 year)', color='black', linestyle=':')
 
 plt.xlabel("Position along the pin in [m]")
 plt.ylabel("Temperature in [K]")
@@ -167,7 +170,7 @@ plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp',
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
-plt.title("Axial temp profile of coolant and cladding (inner and outer) @ 0 GWd/ton")
+plt.title("Axial temp profile of coolant and cladding (inner and outer) @ 0 days")
 plt.legend()
 plt.grid()
 plt.savefig(os.path.join(directory,"coolClad_0.png"),dpi=300, bbox_inches='tight')
@@ -179,13 +182,13 @@ plt.close()
 ## Cladding temperature w.r.t burnup ##
 plt.figure(5,figsize=(16, 9))
 
-plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding ext temp @ 0 GWd/ton', color='blue', linestyle='-')
-plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding ext temp @ 1 GWd/ton', color='blue', linestyle='--')
-plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding ext temp @ 52 GWd/ton', color='blue', linestyle=':')
+plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding ext temp @ 0 days', color='blue', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding ext temp @ 1 week', color='blue', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding ext temp @ 1 year', color='blue', linestyle=':')
 
-plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding int temp @ 0 GWd/ton', color='red', linestyle='-')
-plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding int temp @ 1 GWd/ton', color='red', linestyle='--')
-plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding int temp @ 52 GWd/ton', color='red', linestyle=':')
+plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding int temp @ 0 days', color='red', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding int temp @ 1 week', color='red', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding int temp @ 1 year', color='red', linestyle=':')
 
 plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp', color='black', linestyle='--')
 
@@ -206,9 +209,9 @@ plt.figure(3,figsize=(16, 9))
 delta_temp_cl_0 = yy_hot_temp[:,2,0] - yy_hot_temp[:,1,0]
 delta_temp_cl_1 = yy_hot_temp[:,2,1] - yy_hot_temp[:,1,1]
 delta_temp_cl_52 = yy_hot_temp[:,2,2] - yy_hot_temp[:,1,2]
-plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 GWd/ton')
-plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 GWd/ton')
-plt.plot(xx,delta_temp_cl_52, label='Difference @ 52 GWd/ton')
+plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 days')
+plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 week')
+plt.plot(xx,delta_temp_cl_52, label='Difference @ 1 year')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
@@ -228,9 +231,9 @@ delta_temp_cl_0 = yy_hot_temp[:,3,0] - yy_hot_temp[:,2,0]
 delta_temp_cl_1 = yy_hot_temp[:,3,1] - yy_hot_temp[:,2,1]
 delta_temp_cl_52 = yy_hot_temp[:,3,2] - yy_hot_temp[:,2,2]
 delta_temp_cl_104 = yy_hot_temp[:,3,3] - yy_hot_temp[:,2,3]
-plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 GWd/ton')
-plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 GWd/ton')
-plt.plot(xx,delta_temp_cl_52, label='Difference @ 52 GWd/ton')
+plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 days')
+plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 week')
+plt.plot(xx,delta_temp_cl_52, label='Difference @ 1 year')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
@@ -246,10 +249,10 @@ plt.close()
 ## Fuel diameter variation w.r.t burnup ##
 plt.figure(5,figsize=(16, 9))
 
-plt.plot(xx,fuel_diam_outer[:,0]*1e3, label='Fuel diameter # 0 GWd/ton')
-plt.plot(xx,fuel_diam_outer[:,1]*1e3, label='Fuel diameter # 1 GWd/ton')
-plt.plot(xx,fuel_diam_outer[:,2]*1e3, label='Fuel diameter # 52 GWd/ton')
-plt.plot(xx,fuel_diam_outer[:,3]*1e3, label='Fuel diameter # 102 GWd/ton')
+plt.plot(xx,fuel_diam_outer[:,0]*1e3, label='Fuel diameter @ 0 days')
+plt.plot(xx,fuel_diam_outer[:,1]*1e3, label='Fuel diameter @ 1 week')
+plt.plot(xx,fuel_diam_outer[:,2]*1e3, label='Fuel diameter 1 year')
+plt.plot(xx,fuel_diam_outer[:,3]*1e3, label='Fuel diameter @ 2 years')
 
 plt.plot(xx,np.ones(len(xx))*fuel_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')
 
@@ -267,9 +270,9 @@ plt.close()
 ## Cladding diameter variation w.r.t burnup ##
 plt.figure(6,figsize=(16, 9))
 
-plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter # 0 GWd/ton')
-plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter # 1 GWd/ton')
-plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter # 52 GWd/ton')
+plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter @ 0 days')
+plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter @ 1 week')
+plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter 1 year')
 
 plt.plot(xx,np.ones(len(xx))*clad_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')
 
@@ -287,9 +290,9 @@ plt.close()
 ## gap size variation w.r.t burnup ##
 plt.figure(7,figsize=(16, 9))
 
-plt.plot(xx,yy_gap[:,0]*1e6, label='Gap size # 0 GWd/ton')
-plt.plot(xx,yy_gap[:,1]*1e6, label='Gap size # 1 GWd/ton')
-plt.plot(xx,yy_gap[:,2]*1e6, label='Gap size # 52 GWd/ton')
+plt.plot(xx,yy_gap[:,0]*1e6, label='Gap size @ 0 days')
+plt.plot(xx,yy_gap[:,1]*1e6, label='Gap size @ 1 week')
+plt.plot(xx,yy_gap[:,2]*1e6, label='Gap size 1 year')
 
 plt.plot(xx,np.ones(len(xx))*initial_delta_gap*1e6, label='Initial delta gap', color='black', linestyle='--')
 
@@ -313,7 +316,7 @@ plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius")
 
 plt.xlabel("Position along the pin in [m]")
 plt.ylabel("Radius size in [mm]")
-plt.title("Restructuring effects: radius of regions @ 1 GWd/ton")
+plt.title("Restructuring effects: radius of regions @ 1 week")
 plt.legend(loc='best')
 plt.grid()
 plt.savefig(os.path.join(directory,"rVoid_rClmn_1.png"),dpi=300, bbox_inches='tight')
@@ -324,16 +327,16 @@ plt.close()
 ## radius of void and columnar
 plt.figure(8,figsize=(16, 9))
 
-plt.plot(xx,yy_r_clmn[:,1]*1e3,label="Columnar region radius @ 1 GWd/ton",color="blue",linestyle="-")
-plt.plot(xx,yy_r_void[:,1]*1e3,label="Void region radius @ 1 GWd/ton",color="red",linestyle="-")
-plt.plot(xx,yy_r_clmn[:,2]*1e3,label="Columnar region radius @ 52 GWd/ton",color="blue",linestyle=":")
-plt.plot(xx,yy_r_void[:,2]*1e3,label="Void region radius @ 52 GWd/ton",color="red",linestyle=":")
-plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius @ 1 GWd/ton",color="black",linestyle="-")
-plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius @ 52 GWd/ton",color="black",linestyle=":")
+plt.plot(xx,yy_r_clmn[:,1]*1e3,label="Columnar region radius @ 1 week",color="blue",linestyle="-")
+plt.plot(xx,yy_r_void[:,1]*1e3,label="Void region radius @ 1 week",color="red",linestyle="-")
+plt.plot(xx,yy_r_clmn[:,2]*1e3,label="Columnar region radius @ 1 year",color="blue",linestyle=":")
+plt.plot(xx,yy_r_void[:,2]*1e3,label="Void region radius @ 1 year",color="red",linestyle=":")
+plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius @ 1 week",color="black",linestyle="-")
+plt.plot(xx,fuel_diam_outer[:,1]*1e3,label="Fuel pellet radius @ 1 year",color="black",linestyle=":")
 
 plt.xlabel("Position along the pin in [m]")
 plt.ylabel("Radius size in [mm]")
-plt.title("Restructuring effects: radius of regions @ 1 GWd/ton")
+plt.title("Restructuring effects: radius of regions @ 1 week")
 plt.legend(loc='best')
 plt.grid()
 plt.savefig(os.path.join(directory,"rVoid_rClmn_1_52.png"),dpi=300, bbox_inches='tight')
@@ -361,9 +364,9 @@ plt.close()
 max_vel = 8 # m/s
 plt.figure(10,figsize=(16, 9))
 
-plt.plot(xx,yy_properties[:,5,0], label='Velocity # 0 GWd/ton')
-plt.plot(xx,yy_properties[:,5,1], label='Velocity # 1 GWd/ton')
-plt.plot(xx,yy_properties[:,5,2], label='Velocity # 52 GWd/ton')
+plt.plot(xx,yy_properties[:,5,0], label='Velocity @ 0 days')
+plt.plot(xx,yy_properties[:,5,1], label='Velocity @ 1 week')
+plt.plot(xx,yy_properties[:,5,2], label='Velocity 1 year')
 plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
 
 plt.xlabel("Position [m]")
@@ -384,9 +387,9 @@ margin_0 = fuel_temp_melting(burnup=burnup[0]) - yy_hot_temp[:,4,0]
 margin_1 = fuel_temp_melting(burnup=burnup[1]) - yy_hot_temp[:,4,1]
 margin_52 = fuel_temp_melting(burnup=burnup[2]) - yy_hot_temp[:,4,2]
 
-plt.plot(xx,margin_0, label='Margin @ 0 GWd/ton')
-plt.plot(xx,margin_1, label='Margin @ 1 GWd/ton')
-plt.plot(xx,margin_52, label='Margin @ 52 GWd/ton')
+plt.plot(xx,margin_0, label='Margin @ 0 days')
+plt.plot(xx,margin_1, label='Margin @ 1 week')
+plt.plot(xx,margin_52, label='Margin @ 1 year')
 
 plt.xlabel("Position [m]")
 plt.ylabel("Temperature in [K]")
@@ -402,13 +405,13 @@ plt.close()
 ## cladding temperature
 plt.figure(12,figsize=(16, 9))
 
-plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding external temp @ 0 GWd/ton',color='blue',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding external temp @ 1 GWd/ton',color='blue',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding external temp @ 52 GWd/ton',color='blue',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding external temp @ 0 days',color='blue',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding external temp @ 1 week',color='blue',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding external temp @ 1 year',color='blue',linestyle=':')
 
-plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding internal temp @ 0 GWd/ton',color='red',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding internal temp @ 1 GWd/ton',color='red',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding internal temp @ 52 GWd/ton',color='red',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding internal temp @ 0 days',color='red',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding internal temp @ 1 week',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding internal temp @ 1 year',color='red',linestyle=':')
 
 plt.xlabel("Position [m]")
 plt.ylabel("Temperature in [K]")
@@ -428,8 +431,8 @@ for j in range(0,len(burnup)):
 
 plt.figure(13,figsize=(16, 9))
 
-plt.plot(xx,sw_clad[:,1]*1000, label='Swelling @ 1 GWd/ton')
-plt.plot(xx,sw_clad[:,2]*1000, label='Swelling @ 52 GWd/ton')
+plt.plot(xx,sw_clad[:,1]*1000, label='Swelling @ 1 week')
+plt.plot(xx,sw_clad[:,2]*1000, label='Swelling @ 1 year')
 plt.plot(res)
 
 plt.xlabel("Position along the pin in [mm]")
@@ -455,8 +458,8 @@ for j in range(0,len(burnup)):
 
 plt.figure(14,figsize=(16, 9))
 
-plt.plot(tt,sw_tt[:,1]*100, label='Swelling @ 1 GWd/ton')
-plt.plot(tt,sw_tt[:,2]*100, label='Swelling @ 52 GWd/ton')
+plt.plot(tt,sw_tt[:,1]*100, label='Swelling @ 1 week')
+plt.plot(tt,sw_tt[:,2]*100, label='Swelling @ 1 year')
 
 plt.yscale("log")
 plt.xlabel("Temperature in [K]")
@@ -500,9 +503,9 @@ for j in range(0,len(burnup[0:3])):
 
 plt.figure(16,figsize=(16, 9))
 
-plt.plot(res_x[:,0]*1000,res_y[:,0]/1e6,label='Pressure @ 0 GWd/ton')
-plt.plot(res_x[:,0]*1000,res_y[:,1]/1e6,label='Pressure @ 1 GWd/ton')
-plt.plot(res_x[:,0]*1000,res_y[:,2]/1e6,label='Pressure @ 52 GWd/ton')
+plt.plot(res_x[:,0]*1000,res_y[:,0]/1e6,label='Pressure @ 0 days')
+plt.plot(res_x[:,0]*1000,res_y[:,1]/1e6,label='Pressure @ 1 week')
+plt.plot(res_x[:,0]*1000,res_y[:,2]/1e6,label='Pressure @ 1 year')
 plt.plot(res_x[:,0]*1000,np.ones_like(res_x[:,0])*5,label='Maximum suggested pressure (5 MPa)',color='black',linestyle='--')
 plt.plot(res)
 
@@ -528,10 +531,10 @@ for j in range(0,len(burnup)):
 
 plt.figure(17,figsize=(16, 9))
 
-plt.plot(tt,kgas_tt[:,0], label='k_gas @ 0 GWd/ton')
-plt.plot(tt,kgas_tt[:,1], label='k_gas @ 1 GWd/ton')
-plt.plot(tt,kgas_tt[:,2], label='k_gas @ 52 GWd/ton')
-plt.plot(tt,kgas_tt[:,3], label='k_gas @ 104 GWd/ton')
+plt.plot(tt,kgas_tt[:,0], label='k_gas @ 0 days')
+plt.plot(tt,kgas_tt[:,1], label='k_gas @ 1 week')
+plt.plot(tt,kgas_tt[:,2], label='k_gas @ 1 year')
+plt.plot(tt,kgas_tt[:,3], label='k_gas @ 2 years')
 
 plt.xlabel("Temperature in [K]")
 plt.ylabel("Gas conductivity in [W/m/K]")
@@ -554,10 +557,10 @@ for j in range(0,len(burnup)):
 
 plt.figure(18,figsize=(16, 9))
 
-plt.plot(tt,kf_tt[:,0], label='k_fuel @ 0 GWd/ton')
-plt.plot(tt,kf_tt[:,1], label='k_fuel @ 1 GWd/ton')
-plt.plot(tt,kf_tt[:,2], label='k_fuel @ 52 GWd/ton')
-plt.plot(tt,kf_tt[:,2], label='k_fuel @ 104 GWd/ton')
+plt.plot(tt,kf_tt[:,0], label='k_fuel @ 0 days')
+plt.plot(tt,kf_tt[:,1], label='k_fuel @ 1 week')
+plt.plot(tt,kf_tt[:,2], label='k_fuel @ 1 year')
+plt.plot(tt,kf_tt[:,2], label='k_fuel @ 2 years')
 
 plt.xlabel("Temperature in [K]")
 plt.ylabel("Fuel conductivity in [W/m/K]")
@@ -594,19 +597,19 @@ plt.close()
 ## Contact pressure
 plt.figure(19,figsize=(16, 9))
 
-plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 52 GWd/ton')
+plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 1 year')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Pressure in [MPa]")
 plt.title("Contact pressure w.r.t. burnup")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join(directory,"contactPressure_vs_burnup.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"contactPressure_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
 
-### ******************** PLOT ALREADY SEEN BUT NOW INCLUDING 104 GWd/ton ******************** ###
+### ******************** PLOT ALREADY SEEN BUT NOW INCLUDING 2 years ******************** ###
 
 ## Max fuel internal temperature w.r.t. burnup
 plt.figure(19,figsize=(16, 9))
@@ -633,26 +636,26 @@ plt.close()
 ## Axial temp profile of fuel pellet (inner and outer) - with 102 ##
 plt.figure(19,figsize=(16, 9))
 
-plt.plot(xx,yy_hot_temp[:,3,0], label='Fuel external @ 0 GWd/ton',color='blue',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 52 GWd/ton',color='blue',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,3,0], label='Fuel external @ 0 days',color='blue',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,3,2], label='Fuel external @ 1 year',color='blue',linestyle='--')
 plt.plot(xx,yy_hot_temp[:,3,3], label='Fuel external @ 102 GWd/ton',color='blue',linestyle=':')
 
-plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel internal @ 0 GWd/ton',color='red',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel internal @ 52 GWd/ton',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,4,0], label='Fuel internal @ 0 days',color='red',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,4,2], label='Fuel internal @ 1 year',color='red',linestyle='--')
 plt.plot(xx,yy_hot_temp[:,4,3], label='Fuel internal @ 102 GWd/ton',color='red',linestyle=':')
 
 
 plt.plot(xx,np.ones(len(xx))*fuel_temp_max_suggested, label='Max suggested fuel temp', color='gray', linestyle='--')
-plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[0]), label='Melting point of fuel @ 0 GWd/ton)', color='black', linestyle='-')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[0]), label='Melting point of fuel @ 0 days)', color='black', linestyle='-')
 plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[3]), label='Melting point of fuel @ 102 GWd/ton)', color='black', linestyle='--')
-plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[2]), label='Melting point of fuel @ 52 GWd/ton)', color='black', linestyle=':')
+plt.plot(xx,np.ones(len(xx))*fuel_temp_melting(burnup=burnup[2]), label='Melting point of fuel @ 1 year)', color='black', linestyle=':')
 
 plt.xlabel("Position along the pin in [m]")
 plt.ylabel("Temperature in [K]")
 plt.title("Axial temp profile of fuel pellet (inner and outer)")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join(directory,"fuel_pellet_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"fuel_pellet_0_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -661,10 +664,10 @@ plt.close()
 ## gap size variation w.r.t burnup 104 ##
 plt.figure(20,figsize=(16, 9))
 
-plt.plot(xx,yy_gap[:,0]*1e6, label='Gap size # 0 GWd/ton')
-plt.plot(xx,yy_gap[:,1]*1e6, label='Gap size # 1 GWd/ton')
-plt.plot(xx,yy_gap[:,2]*1e6, label='Gap size # 52 GWd/ton')
-plt.plot(xx,yy_gap[:,3]*1e6, label='Gap size # 104 GWd/ton')
+plt.plot(xx,yy_gap[:,0]*1e6, label='Gap size @ 0 GWd/ton')
+plt.plot(xx,yy_gap[:,1]*1e6, label='Gap size @ 1 GWd/ton')
+plt.plot(xx,yy_gap[:,2]*1e6, label='Gap size @ 52 GWd/ton')
+plt.plot(xx,yy_gap[:,3]*1e6, label='Gap size @ 2 years')
 
 plt.plot(xx,np.ones(len(xx))*initial_delta_gap*1e6, label='Initial delta gap', color='black', linestyle='--')
 
@@ -692,13 +695,13 @@ plt.show()
 plt.close()
 
 
-## velocity 104 GWd/ton
+## velocity 2 years
 max_vel = 8 # m/s
 plt.figure(22,figsize=(16, 9))
 
-plt.plot(xx,yy_properties[:,5,0], label='Velocity # 0 GWd/ton')
-plt.plot(xx,yy_properties[:,5,2], label='Velocity # 52 GWd/ton')
-plt.plot(xx,yy_properties[:,5,3], label='Velocity # 102 GWd/ton')
+plt.plot(xx,yy_properties[:,5,0], label='Velocity @ 0 days')
+plt.plot(xx,yy_properties[:,5,2], label='Velocity 1 year')
+plt.plot(xx,yy_properties[:,5,3], label='Velocity @ 2 years')
 plt.plot(xx,np.ones_like(xx)*max_vel, label='Maximum velocity allowed', linestyle='--', color='black')
 
 plt.xlabel("Position [m]")
@@ -718,8 +721,8 @@ margin_0 = fuel_temp_melting(burnup=burnup[0]) - yy_hot_temp[:,4,0]
 margin_1 = fuel_temp_melting(burnup=burnup[3]) - yy_hot_temp[:,4,3]
 margin_52 = fuel_temp_melting(burnup=burnup[2]) - yy_hot_temp[:,4,2]
 
-plt.plot(xx,margin_0, label='Margin @ 0 GWd/ton')
-plt.plot(xx,margin_52, label='Margin @ 52 GWd/ton')
+plt.plot(xx,margin_0, label='Margin /ton')
+plt.plot(xx,margin_52, label='Margin @ 1 year')
 plt.plot(xx,margin_1, label='Margin @ 102 GWd/ton')
 
 plt.xlabel("Position [m]")
@@ -736,13 +739,13 @@ plt.close()
 ## cladding temperature 104
 plt.figure(24,figsize=(16, 9))
 
-plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding external temp @ 0 GWd/ton',color='blue',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding external temp @ 52 GWd/ton',color='blue',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,1,3], label='Cladding external temp @ 104 GWd/ton',color='blue',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding external temp @ 0 days',color='blue',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding external temp @ 1 year',color='blue',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,1,3], label='Cladding external temp @ 2 years',color='blue',linestyle=':')
 
-plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding internal temp @ 0 GWd/ton',color='red',linestyle='-')
-plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding internal temp @ 52 GWd/ton',color='red',linestyle='--')
-plt.plot(xx,yy_hot_temp[:,2,3], label='Cladding internal temp @ 104 GWd/ton',color='red',linestyle=':')
+plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding internal temp @ 0 days',color='red',linestyle='-')
+plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding internal temp @ 1 year',color='red',linestyle='--')
+plt.plot(xx,yy_hot_temp[:,2,3], label='Cladding internal temp @ 2 years',color='red',linestyle=':')
 
 plt.xlabel("Position [m]")
 plt.ylabel("Temperature in [K]")
@@ -765,9 +768,9 @@ for j in range(0,len(burnup)):
 
 plt.figure(25,figsize=(16, 9))
 
-plt.plot(tt,sw_tt[:,1]*100, label='Swelling @ 1 GWd/ton')
-plt.plot(tt,sw_tt[:,2]*100, label='Swelling @ 52 GWd/ton')
-plt.plot(tt,sw_tt[:,3]*100, label='Swelling @ 104 GWd/ton')
+plt.plot(tt,sw_tt[:,1]*100, label='Swelling @ 1 week')
+plt.plot(tt,sw_tt[:,2]*100, label='Swelling @ 1 year')
+plt.plot(tt,sw_tt[:,3]*100, label='Swelling @ 2 years')
 
 plt.yscale("log")
 plt.xlabel("Temperature in [K]")
@@ -795,10 +798,10 @@ for j in range(0,len(burnup[0:4])):
 
 plt.figure(26,figsize=(16, 9))
 
-plt.plot(res_x[:,0]*1000,res_y[:,0]/1e6,label='Pressure @ 0 GWd/ton')
-plt.plot(res_x[:,0]*1000,res_y[:,1]/1e6,label='Pressure @ 1 GWd/ton')
-plt.plot(res_x[:,0]*1000,res_y[:,2]/1e6,label='Pressure @ 52 GWd/ton')
-plt.plot(res_x[:,0]*1000,res_y[:,3]/1e6,label='Pressure @ 104 GWd/ton')
+plt.plot(res_x[:,0]*1000,res_y[:,0]/1e6,label='Pressure @ 0 days')
+plt.plot(res_x[:,0]*1000,res_y[:,1]/1e6,label='Pressure @ 1 week')
+plt.plot(res_x[:,0]*1000,res_y[:,2]/1e6,label='Pressure @ 1 year')
+plt.plot(res_x[:,0]*1000,res_y[:,3]/1e6,label='Pressure @ 2 years')
 plt.plot(res_x[:,0]*1000,np.ones_like(res_x[:,0])*5,label='Maximum suggested pressure (5 MPa)',color='black',linestyle='--')
 plt.plot(res)
 
@@ -821,10 +824,10 @@ delta_temp_cl_0 = yy_hot_temp[:,2,0] - yy_hot_temp[:,1,0]
 delta_temp_cl_1 = yy_hot_temp[:,2,1] - yy_hot_temp[:,1,1]
 delta_temp_cl_52 = yy_hot_temp[:,2,2] - yy_hot_temp[:,1,2]
 delta_temp_cl_104 = yy_hot_temp[:,2,3] - yy_hot_temp[:,1,3]
-plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 GWd/ton')
-plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 GWd/ton')
-plt.plot(xx,delta_temp_cl_52, label='Difference @ 52 GWd/ton')
-plt.plot(xx,delta_temp_cl_104, label='Difference @ 104 GWd/ton')
+plt.plot(xx,delta_temp_cl_0, label='Difference @ 0 days')
+plt.plot(xx,delta_temp_cl_1, label='Difference @ 1 week')
+plt.plot(xx,delta_temp_cl_52, label='Difference @ 1 year')
+plt.plot(xx,delta_temp_cl_104, label='Difference @ 2 years')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Temperature in [K]")
@@ -840,10 +843,10 @@ plt.close()
 ## Cladding diameter variation w.r.t burnup 104 ##
 plt.figure(28,figsize=(16, 9))
 
-plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter # 0 GWd/ton')
-plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter # 1 GWd/ton')
-plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter # 52 GWd/ton')
-plt.plot(xx,clad_diam_out[:,3]*1e3, label='Cladding diameter # 104 GWd/ton')
+plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter @ 0 GWd/ton')
+plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter @ 1 GWd/ton')
+plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter @ 52 GWd/ton')
+plt.plot(xx,clad_diam_out[:,3]*1e3, label='Cladding diameter @ 2 years')
 
 plt.plot(xx,np.ones(len(xx))*clad_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')
 
@@ -861,15 +864,15 @@ plt.close()
 ## Cladding temperature w.r.t burnup ##
 plt.figure(29,figsize=(16, 9))
 
-plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding ext temp @ 0 GWd/ton', color='blue', linestyle='-')
-plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding ext temp @ 1 GWd/ton', color='blue', linestyle='--')
-plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding ext temp @ 52 GWd/ton', color='blue', linestyle='-.')
-plt.plot(xx,yy_hot_temp[:,1,3], label='Cladding ext temp @ 104 GWd/ton', color='blue', linestyle=':')
+plt.plot(xx,yy_hot_temp[:,1,0], label='Cladding ext temp @ 0 days', color='blue', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,1,1], label='Cladding ext temp @ 1 week', color='blue', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,1,2], label='Cladding ext temp @ 1 year', color='blue', linestyle='-.')
+plt.plot(xx,yy_hot_temp[:,1,3], label='Cladding ext temp @ 2 years', color='blue', linestyle=':')
 
-plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding int temp @ 0 GWd/ton', color='red', linestyle='-')
-plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding int temp @ 1 GWd/ton', color='red', linestyle='--')
-plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding int temp @ 52 GWd/ton', color='red', linestyle='-.')
-plt.plot(xx,yy_hot_temp[:,2,3], label='Cladding int temp @ 104 GWd/ton', color='red', linestyle=':')
+plt.plot(xx,yy_hot_temp[:,2,0], label='Cladding int temp @ 0 days', color='red', linestyle='-')
+plt.plot(xx,yy_hot_temp[:,2,1], label='Cladding int temp @ 1 week', color='red', linestyle='--')
+plt.plot(xx,yy_hot_temp[:,2,2], label='Cladding int temp @ 1 year', color='red', linestyle='-.')
+plt.plot(xx,yy_hot_temp[:,2,3], label='Cladding int temp @ 2 years', color='red', linestyle=':')
 
 plt.plot(xx,np.ones(len(xx))*clad_temp_max, label='Max suggested cladding temp', color='black', linestyle='--')
 
@@ -886,14 +889,14 @@ plt.close()
 ## Contact pressure
 plt.figure(30,figsize=(16, 9))
 
-plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 52 GWd/ton')
-plt.plot(xx,contactPress[:,3]*1e-6,label='Contact p @ 104 GWd/ton')
+plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 1 year')
+plt.plot(xx,contactPress[:,3]*1e-6,label='Contact p @ 2 years')
 
 plt.xlabel("Position in [m]")
 plt.ylabel("Pressure in [MPa]")
 plt.title("Contact pressure w.r.t. burnup")
 plt.legend(loc='best')
 plt.grid()
-plt.savefig(os.path.join(directory,"contactPressure_vs_burnup.png"),dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(directory,"contactPressure_52_104.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()

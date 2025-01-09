@@ -7,7 +7,7 @@ from sympy import exp
 import numpy as np
 
 #### DATA GUESS ####
-clad_thickness_0 = 0.47e-3 # m
+clad_thickness_0 = 0.53e-3 # m
 
 #### ************************************************************************************************************** ####
 #### ************************************************ DESIGN SPECS ************************************************ ####
@@ -187,7 +187,7 @@ def swelling_fuel(z,burnup,size):
     """
     bup = peak_factor_calc(z)*burnup
 
-    return (1 + 0.0007*bup)*size
+    return (1 + 0.0007/3*bup)*size
 
 
 def k_th_gas(temperature,x_he=1,x_xe=0,x_kr=0):
