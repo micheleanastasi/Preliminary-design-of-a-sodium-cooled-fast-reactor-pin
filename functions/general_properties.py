@@ -7,7 +7,7 @@ from sympy import exp
 import numpy as np
 
 #### DATA GUESS ####
-clad_thickness_0 = 0.525e-3 # m
+clad_thickness_0 = 0.53e-3 # m
 extra_pin_len = 0.85    # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
 #### ************************************************************************************************************** ####
