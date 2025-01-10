@@ -7,11 +7,19 @@ from sympy import exp
 import numpy as np
 
 #### DATA GUESS ####
-clad_thickness_0 = 0.53e-3 # m
+clad_thickness_0 = 0.525e-3 # m
+extra_pin_len = 0.85    # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
 #### ************************************************************************************************************** ####
 #### ************************************************ DESIGN SPECS ************************************************ ####
 #### ************************************************************************************************************** ####
+
+
+#### ************** POWER DISTRIBUTION ************* ####
+power_lin_max = 38700 # W/m - linear power @ peak factor node (@ 0.3825 m over the bottom)
+peak_factor = np.array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498])
+power_lin_avg=np.average(power_lin_max*peak_factor)
+neu_max_flux = 6.1e15 # n/cm^2/sec
 
 
 #### ************ THERMO HYDRAULICS ************* ####
@@ -160,8 +168,8 @@ def fuel_Young_modulus(temperature,porosity):
 
 
 ## restructuring properties
-fuel_temp_clmn = 1800 + 273.15 # K
-fuel_temp_eqax = 1600 + 273.15 # K
+fuel_temp_clmn = 1700 + 273.15 # K
+fuel_temp_eqax = 1300 + 273.15 # K
 
 poro_asf = 0.12
 poro_clmn = 0.05

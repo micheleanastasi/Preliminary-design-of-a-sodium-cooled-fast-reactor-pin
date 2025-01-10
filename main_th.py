@@ -18,10 +18,10 @@ from functions.thermal_functions import *
 
 
 ## CONFIG
-loadExisting = False # if True plotting already computed values
+loadExisting = True # if True plotting already computed values
 
 # thickness from general_properties.py : 0.53 mm
-extra_pin_len = 0.90 # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
+#extra_pin_len = 0.90 # m
 #time = (0,7,365,730) # days
 #burnup = (0,1,56,104) # GWd/ton
 burnup = (0,1,64,128) # GWd/tonHM
@@ -198,6 +198,21 @@ plt.title("Cladding temperature w.r.t burnup")
 plt.legend(loc='best')
 plt.grid()
 plt.savefig(os.path.join(directory,"claddingTemp_0_1_52.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
+
+
+## Contact pressure
+plt.figure(3,figsize=(16, 9))
+
+plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 1 year')
+
+plt.xlabel("Position in [m]")
+plt.ylabel("Pressure in [MPa]")
+plt.title("Contact pressure w.r.t. burnup")
+plt.legend(loc='best')
+plt.grid()
+plt.savefig(os.path.join(directory,"contactPressure_52.png"),dpi=300, bbox_inches='tight')
 plt.show()
 plt.close()
 
@@ -594,19 +609,7 @@ plt.close()
 
 
 
-## Contact pressure
-plt.figure(19,figsize=(16, 9))
 
-plt.plot(xx,contactPress[:,2]*1e-6,label='Contact p @ 1 year')
-
-plt.xlabel("Position in [m]")
-plt.ylabel("Pressure in [MPa]")
-plt.title("Contact pressure w.r.t. burnup")
-plt.legend(loc='best')
-plt.grid()
-plt.savefig(os.path.join(directory,"contactPressure_52.png"),dpi=300, bbox_inches='tight')
-plt.show()
-plt.close()
 
 
 ### ******************** PLOT ALREADY SEEN BUT NOW INCLUDING 2 years ******************** ###

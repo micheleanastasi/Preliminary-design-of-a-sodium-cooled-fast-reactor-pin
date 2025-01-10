@@ -9,6 +9,8 @@ from scipy.integrate import quad as integral
 from math import sqrt,log
 import os
 
+from sympy.vector import Divergence
+
 from functions.general_functions import *
 from functions.general_properties import *
 
@@ -377,23 +379,31 @@ def fg_prod(burnup):
 
     HP: FGR = 100 % (conservative/worst case and also easier)
     """
+    FGR=1 # fraction of produced gases that are released
+
     N_av = 6.022e23 # atoms/mol
     y_xe = 0.27
     y_kr = 0.03
     y_he = 0.022
 
     E_fiss = 200e6 * 1.6e-19 # J
-    q_third = power_lin_max/ (pi*0.25*fuel_d_outer**2) # W/m^3
+    # q_third = power_lin_max/ (pi*0.25*fuel_d_outer**2) # W/m^3
+
+    #   consider avg power for gas production
+    # print(f'avg power {power_lin_avg}')
+    q_third = power_lin_avg/ (pi*0.25*fuel_d_outer**2) # W/m^3
     vol = pin_column_height * (pi*0.25*fuel_d_outer**2) # m^3
     F_prime = q_third / E_fiss # fiss/s/m^3
 
-    mass = fuel_density * vol/1000 # ton
+    mass = fuel_density * vol/1000 *(239.77/271.77)  # ton (heavy metal), last factor is MM_metal/MM_MOX
     q = power_lin_max * pin_column_height / 1e9 # GW
     time = burnup * 86400 * mass/ q # seconds
 
-    mol_xe = ( y_xe * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
-    mol_kr = ( y_kr * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
-    mol_he = ( y_he * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
+    # print(f'time : {time}')
+
+    mol_xe = FGR*( y_xe * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
+    mol_kr = FGR*( y_kr * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
+    mol_he = FGR*( y_he * F_prime * vol ) / N_av  # atoms/s * mol/atoms = mol/s
     return mol_xe*time, mol_kr*time, mol_he*time
 
 
@@ -524,17 +534,25 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
         #checking to avoid code divergence (or blocked convergence) happening when gap size is negative, running only another time though
         #happening if gap value, got from iteration, oscillating around zero (from pos to neg and vice versa) for every iter
         divergenceSafety = np.abs(conv) > np.abs(prec_conv) and isFirstTime==False
-        notConvergenceSafety = delta_gap < 0 and np.abs(prec_conv-conv)<1 and np.abs(conv)>100
+        notConvergenceSafety = (delta_gap < 0 and iter > 40) or delta_gap < 0 and np.abs(prec_conv-conv)<1
         gapAlmostZero = np.abs(delta_gap) < 0.5e-6 and np.abs(prec_conv-conv)<1
-        if (delta_gap < 0 and iter > 40) or notConvergenceSafety or divergenceSafety: # all sensitive conditions to avoid divergence...
+
+        if divergenceSafety: # all sensitive conditions to avoid divergence...
             isOkayColdGeo = True
-            fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 # contact! NB clad temps not influenced by what's inside,so same value... then delta gap null!
+            fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 - 2 * delta_gap # used to reset to perform further calcs... NB clad temps not influenced by what's inside,so same value... then delta gap null!
             fuel_d_out_0 = float(fuel_d_out_0) # code would crash without this conversion :(
             fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E,clad_nu, clad_E, fuel_r_void)
-            #if divergenceSafety:
-            #    delta_gap = 0
             temp_array, _ = thermal_computing(z, clad_d_out_0, fuel_d_out_0, clad_thick_0, bup,fc_contact_pressure) # de facto now gap equal to zero for thermal calc but not for mech
-            #delta_gap = -0.001e-6 # m - small value to avoid possible problems
+
+        if notConvergenceSafety: # if oscillating around zero - approx: linearizing around zero
+            gapAlmostZero = True
+            for i in range(0,len(temp_array)):
+                temp_array[i] = (temp_array[i]+prec_temp_array[i])/2
+            delta_gap = (delta_gap+prec_gap)/2
+            fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 - 2 * delta_gap  # used to reset to perform further calcs... NB clad temps not influenced by what's inside,so same value... then delta gap null!
+            fuel_d_out_0 = float(fuel_d_out_0)  # code would crash without this conversion :(
+            fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E,clad_nu, clad_E, fuel_r_void)
+
         if np.abs(prec_conv-conv)<1 and delta_gap>0:    # to speed up code if too low to converge even with open gap...
             gapAlmostZero = True
         if iter == 20:
@@ -579,6 +597,8 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
             print(f"Temp void: {round(float(temp_array[4]), 2)} K - Temp old: {np.round(oldMaxTemp, 2)} K")
             print(f"Radius of clmn: {round(float(radClmn), 6)} m, radius of void: {round(float(radVoidGuess), 6)} m")
         print(f"\n>FINAL DATA:")
+        if divergenceSafety:
+            print(f"WARNING! Divergence of code, hence potential positive thermal feedback!")
         print(f"Fuel temp inner: HOT:{np.round(temp_array[4], 2)} K\nOld gap: {round(float(old_gap*1e6),4)} um --> New gap: {round(float(delta_gap*1e6),2)} um"
               f" ({round(float(100 * delta_gap / initial_delta_gap),2)}%)")
         if delta_gap < 0:

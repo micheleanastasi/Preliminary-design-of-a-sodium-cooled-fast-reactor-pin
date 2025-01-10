@@ -23,7 +23,7 @@ sw_clad = np.load(os.path.join("main_numpy_saves", "sw_clad.npy"))
 contactPress = np.load(os.path.join("main_numpy_saves", "contactPress.npy"))
 
 
-burnup=52   #[Gwd/t]
+burnup=64   #[Gwd/t]
 
 
 ## VARIABLE INITIALIZATION
@@ -43,26 +43,29 @@ for i in range(len(yy_temp_clad_in)):
     stress_rupture[i]=UTS_cladding(yy_temp_clad_in[i]-273.15)
     stress_rupture_embrittled[i] = yield_stress_embrittlement(stress_rupture[i], helium_content_moles)
 
-print(f'Yield stress @ Bu=52 [GWd/t] : {stress_yield_embrittled*1e-6} [Mpa]')
+print(f'Yield stress @ Bu=64 [GWd/t] : {stress_yield_embrittled*1e-6} [Mpa]')
+print(f'Rupture stress at Bu = 64 [GWd/t] : {max(stress_rupture_embrittled)*1e-6} [MPa]')
 
-
-print(f'Max contact pressure at Bu = 52 [GWd/t] : {max(contactPress[:,2])*1e-6} [MPa]')
 gas_pressure=pressure[2]
 total_pressure=contactPress[:,2]+gas_pressure
-print(f'Total pressure at Bu= 52 [GWd/t] : {max(total_pressure)*1e-6} [MPa]')
+avg_pressure=np.average(total_pressure)
+
+
+print('******************')
+print('Contact pressure @ Bu=64 [GWd/t] \\')
+print(f'Gas pressure = {gas_pressure*1e-6} [MPa]')
+print(f'Total (avg) pressure = {avg_pressure*1e-6} [MPa]')
+print(f'Max pressure = {max(total_pressure)*1e-6} [MPa]')
 
 
 
 #### ***************** cladding thickness - Mariotte solution - Tresca criterion
 
-critical_stress=total_pressure*(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
-print(f'Critical stress at Bu = 52 [GWd/t] : {max(critical_stress)*1e-6} [MPa]')
+critical_stress=avg_pressure*(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
+print(f'Critical stress  = {max(critical_stress)*1e-6} [MPa]')
 
 max_total_pressure=stress_yield_embrittled/(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
 critical_stress*1e-6
-# 120*(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
-
-stress_rupture_embrittled*1e-6
 
 ## Time to rupture
 
