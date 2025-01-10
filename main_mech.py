@@ -56,7 +56,7 @@ print('Contact pressure @ Bu=64 [GWd/t] \\')
 print(f'Gas pressure = {gas_pressure*1e-6} [MPa]')
 print(f'Total (avg) pressure = {avg_pressure*1e-6} [MPa]')
 print(f'Max pressure = {max(total_pressure)*1e-6} [MPa]')
-
+print('******************')
 
 
 #### ***************** cladding thickness - Mariotte solution - Tresca criterion
@@ -66,6 +66,7 @@ print(f'Critical stress  = {max(critical_stress)*1e-6} [MPa]')
 
 max_total_pressure=stress_yield_embrittled/(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
 critical_stress*1e-6
+
 
 ## Time to rupture
 
