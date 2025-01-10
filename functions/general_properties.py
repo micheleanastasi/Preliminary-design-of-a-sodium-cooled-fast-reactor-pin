@@ -6,9 +6,10 @@ import sympy as sy
 from sympy import exp
 import numpy as np
 
+
 #### DATA GUESS ####
 clad_thickness_0 = 0.53e-3 # m
-extra_pin_len = 0.85    # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
+extra_pin_len = 0.70    # m - little diameter expansion then (whereas length exp neglected!) (HP CONS) !
 
 #### ************************************************************************************************************** ####
 #### ************************************************ DESIGN SPECS ************************************************ ####
@@ -193,7 +194,8 @@ def swelling_fuel(z,burnup,size):
     """
     BURN UP IN GWd/ton
     """
-    bup = peak_factor_calc(z)*burnup
+    #bup = peak_factor_calc(z)*burnup
+    bup = interpolated_peak_factor(z) * burnup
 
     return (1 + 0.0007/3*bup)*size
 
@@ -228,12 +230,8 @@ def swelling_clad(z,burnup,temperature,diam_clad):
     """
     celsTemp = temperature - 273.15
 
-    #unit = pin_top_pos / 10  #0.085
-    #peak_factor = np.array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498])
-    #value = int(z/unit)
-    #flux = peak_factor[value] * 6.1e15 # n/cm^2/sec
-
-    flux = peak_factor_calc(z) * 6.1e15 # n/cm^2/sec
+    #flux = peak_factor_calc(z) * 6.1e15 # n/cm^2/sec
+    flux = interpolated_peak_factor(z) * 6.1e15 # n/cm^2/sec
 
     time = (3600*24)*365 * (burnup/52) # sec - conversion from b-up to seconds (HP constant flux)
     #sw = 1.5e-3 * exp( -2.5 * ( (celsTemp - 450)/100 )**2 ) * ( flux*time/1e22 )**2.75 # %
@@ -277,5 +275,21 @@ def peak_factor_calc(z):
     value = int(z/unit)
 
     return peak_factor[value]
+
+def interpolated_peak_factor(z):
+    unit = pin_top_pos / 10  #0.085
+    peak_factor = np.array([.572, .737, .868, .958, 1, .983, .912, .802, .658, .498, .498]) # ultimo ripetuto poicè si riferisce a z = 0.85
+    discrete_power = peak_factor * 1
+
+    discrete_domain = np.arange(pin_bottom_pos + unit / 2, pin_top_pos - unit / 2, unit)
+    yy_power = np.zeros_like(discrete_domain)
+    for i in range(0, len(discrete_domain)):
+        value = int(discrete_domain[i] / unit)
+        yy_power[i] = discrete_power[value]
+
+    coeff = np.polyfit(discrete_domain, yy_power, 9)
+    poly = np.poly1d(coeff)
+    y_new = poly(z)
+    return y_new
 
 

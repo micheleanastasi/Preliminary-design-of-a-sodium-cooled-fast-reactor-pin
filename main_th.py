@@ -18,7 +18,9 @@ from functions.thermal_functions import *
 
 
 ## CONFIG
-loadExisting = True # if True plotting already computed values
+loadExisting = False # if True plotting already computed values
+print_debug = True
+print_status = True
 
 # thickness from general_properties.py : 0.53 mm
 #extra_pin_len = 0.90 # m
@@ -79,7 +81,7 @@ else:
 
             # COMPUTING TEMPS, GAPS, NEW CLAD AND FUEL DIAMETERS
             yy_cold_temp[i,:,j], yy_hot_temp[i, :,j], yy_gap[i,j], yy_properties[i,:,j], clad_diam_out[i,j], fuel_diam_outer[i,j],contactPress[i,j] = hot_geometry_general(
-                xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0, burnup[j])
+                xx[i], clad_d_outer, fuel_d_outer, clad_thickness_0, burnup[j],print_debug=print_debug,print_status=print_status)
 
             # RESTRUCTURING RESULTS
             if burnup[j] > 0.1: # GWd/ton - threshold
