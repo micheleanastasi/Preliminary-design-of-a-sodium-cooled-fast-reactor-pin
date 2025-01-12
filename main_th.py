@@ -1,6 +1,5 @@
 """
-GENERAL MAIN SCRIPT USED TO CALCULATE EVERYTHING!
-Other ones relevant: main_hot_thickness_margin_calc.py to calculate cladding thickness
+GENERAL MAIN SCRIPT USED TO CALCULATE EVERYTHING CONCERNING THERMAL ASPECTS!
 
 KINETICS:
 - start: only hot geometry, no burn up
@@ -159,6 +158,23 @@ plt.savefig(os.path.join(directory,"fuel_pellet_0_1_52.png"),dpi=300, bbox_inche
 plt.show()
 plt.close()
 
+
+
+## plot radial - fuel
+pos = int(res/2)
+rr = np.linspace(0,fuel_diam_outer[pos,0]/2,res)
+rr_temp = temp_fuel_radial(rr,yy_hot_temp[pos,3,1],yy_hot_temp[pos,4,1],fuel_diam_outer[pos,1]/2,yy_r_void[pos,1])
+
+plt.figure(2,figsize=(16, 9))
+
+plt.plot(rr,rr_temp)
+plt.xlabel("Radius in [m]")
+plt.ylabel("Temperature in [K]")
+plt.title("Radial temp profile of fuel pellet @ 1 GWd/ton(HM) and midplane")
+plt.grid()
+plt.savefig(os.path.join(directory,"radialPellet_temp.png"),dpi=300, bbox_inches='tight')
+plt.show()
+plt.close()
 
 
 ## plot coolant, cladding in and out temp for hot and cold geometries ##

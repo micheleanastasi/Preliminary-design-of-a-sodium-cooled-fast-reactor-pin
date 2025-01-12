@@ -100,8 +100,7 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
       to solve for it... anyway to find temperatures changes we only need to set the input and it's done! So quite easy
 
     HP:
-    - thickness variation due to thermal exp assumed to be constant (to simplify calculations, reasonable approach), but
-      actually its value may change by implementing swelling phenomenum (of course see successive functions...)
+    - thickness variation due to thermal exp assumed to be constant (to simplify calculations, reasonable approach)
 
     :param clad_d_out: Varying parameter! (hot geometry)
     :param z: in [m]
@@ -125,7 +124,6 @@ def temp_cladding_inner(z,clad_d_out,clad_thick):
 def temp_fuel_outer(z,clad_d_out,fuel_diam_outer,clad_th,burnup,contact_pressure):
     """
     NOTE:
-    - CONTACT HEAT EXCHANGE NOT YET IMPLEMENTED, NEITHER RADIATIVE ONE!
     - DELTA GAP UNKNOWN firstly, since it depends on Fuel out and Clad in, which depends itself on Thickness (ITS
         VARIATION ASSUMED NULL) and Clad out (fixed by project but expanding...)
 
@@ -203,7 +201,7 @@ def temp_fuel_radial(rr,fuel_temp_out,fuel_temp_max,fuel_r_out,fuel_r_void):
 def diameter_th_exp_cladding(diam,t_max):
     """
     NOTE:
-    - should be assumed as temp the one related to clad inner, to be conservative!
+    - should be assumed as temp the one related to clad inner, to be conservative! Although not so much difference
     """
     clad_exp = clad_eps_th.subs(temp,float(t_max))
     return diam + clad_exp*diam
@@ -226,21 +224,6 @@ def diameter_th_exp_fuel(z,diam,t_max, t_min, burnup,rad_void):
 
     #out = ( radius + alfa_fuel * ( A*radius - (B/3)*radius**3 ) )
 
-    return out * 2
-
-
-def length_th_exp_cladding(leng,t_max):
-    """
-    To be used to take into account increase of volume for pressure
-    """
-    return leng + leng*clad_eps_th.subs(temp,t_max)
-
-def length_th_exp_fuel(leng,t_max):
-    """
-    CONSIDERING THERMAL
-    OSS burn up in GWd/ton(HM)
-    """
-    out = ( leng + leng*alfa_fuel* ( t_max - temp_in) ) # (HP CONS)
     return out * 2
 
 
@@ -281,8 +264,7 @@ def fuel_restructuring(z,temp_fuel_out,temp_fuel_in,diam_fuel_out,diam_clad_out,
     OSS:
     - no changing radius with time (burnup), hence generating for low burnup (about 1), then saving them to be used in b-up higher levels, otherwise we would get lower diameters
         even if the initial radius should not change so dramatically and this would be unphysical, despite the fact that it would be too conservative
-    - reduction of void volume (here normalized per height, so area!) to make up for the contact with the cladding (HP SEMPL): pellet, ductile inside (NB NDTT...) and cracked, can
-        be thought as closing the void region to accomodate swelling expansion
+
 
     GET:
     - new diameter of fuel by only ONE iteration (like hot geo iteration)
@@ -441,9 +423,6 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
     - set RestructOn to take into account restructuring effects (however not computed if under a centain threshold)
 
     OSS
-    - with higher burnup we would have lower levels of restructuring (as noted a posteriori, temperatures generally decrease): then I do not consider
-        the radius values (clmn, void) for burnup = 0 but the current bup value of the function, in order to minimize the beneficial effecys (HP CONS) and
-        especially to simplify the code!!
     - about order of properties:
       'HTC [W/m^2/K]','Re','Pr','Pe','Nu', 'avg_velocity [m/s]','net_area [m^2]','density [kg/m^3]','dyn_viscosity [Pa*s]','spec_heat [J/kg/K]', 'th_cond [W/m/K]']
 
@@ -599,7 +578,7 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
             print(f"Temp void: {round(float(temp_array[4]), 2)} K - Temp old: {np.round(oldMaxTemp, 2)} K")
             print(f"Radius of clmn: {round(float(radClmn), 6)} m, radius of void: {round(float(radVoidGuess), 6)} m")
         print(f"\n>FINAL DATA:")
-        if divergenceSafety and isMelting == False:
+        if divergenceSafety:
             print(f"WARNING! Divergence of code, hence potential positive thermal feedback!")
         print(f"Fuel temp inner: HOT:{np.round(temp_array[4], 2)} K\nOld gap: {round(float(old_gap*1e6),4)} um --> New gap: {round(float(delta_gap*1e6),2)} um"
               f" ({round(float(100 * delta_gap / initial_delta_gap),2)}%)")

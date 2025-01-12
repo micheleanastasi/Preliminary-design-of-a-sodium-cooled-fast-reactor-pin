@@ -1,16 +1,8 @@
 """
 *** HOT GEOMETRY THERMAL ANALYSIS ***
 
-Main script to exploit functions and then computing results
+Script to test and exploit functions and then computing results
 
-NOTE: Nonetheless, up to this point everything was taken into account in a conservative approach, although some aspect should
-      be evaluated accordingly (i.e. how much is Pu redistr. negligible?)
-
-SO the kinetics is:
-- start: only hot geometry, no burn up (we are HERE but cons.hp: burn up --> inf)
-- then: hot geo + restructuring + Pu redistribution
-- end: hot geo + "" + "" + burn up
-properties changing: k_fuel, Tm_fuel, ...
 """
 import matplotlib.pyplot as plt
 import pandas as pd

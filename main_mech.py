@@ -1,3 +1,6 @@
+"""
+GENERAL MAIN SCRIPT USED TO CALCULATE EVERYTHING CONCERNING MECHANICAL ASPECTS!
+"""
 import numpy as np
 import sympy as sym
 import matplotlib.pyplot as plt
@@ -43,7 +46,7 @@ for i in range(len(yy_temp_clad_in)):
     stress_rupture[i]=UTS_cladding(yy_temp_clad_in[i]-273.15)
     stress_rupture_embrittled[i] = yield_stress_embrittlement(stress_rupture[i], helium_content_moles)
 
-print(f'Yield stress @ Bu=64 [GWd/t] : {stress_yield_embrittled*1e-6} [Mpa]')
+print(f'Yield stress @ Bu=64 [GWd/t] as a function of z : {stress_yield_embrittled*1e-6} [Mpa]')
 print(f'Rupture stress at Bu = 64 [GWd/t] : {max(stress_rupture_embrittled)*1e-6} [MPa]')
 
 gas_pressure=pressure[2]
@@ -56,22 +59,43 @@ print('Contact pressure @ Bu=64 [GWd/t] \\')
 print(f'Gas pressure = {gas_pressure*1e-6} [MPa]')
 print(f'Total (avg) pressure = {avg_pressure*1e-6} [MPa]')
 print(f'Max pressure = {max(total_pressure)*1e-6} [MPa]')
-print('******************')
+
 
 
 #### ***************** cladding thickness - Mariotte solution - Tresca criterion
 
-critical_stress=avg_pressure*(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
+stress_r=-avg_pressure/2
+stress_theta=avg_pressure*clad_diam_out[:,2]/2/clad_thickness_0
+stress_z=avg_pressure*clad_diam_out[:,2]/2/2/clad_thickness_0
+
+# critical_stress=avg_pressure*(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
+critical_stress=np.abs(stress_theta-stress_r)
 print(f'Critical stress  = {max(critical_stress)*1e-6} [MPa]')
 
 max_total_pressure=stress_yield_embrittled/(clad_diam_out[:,2]/2/clad_thickness_0+0.5)
 critical_stress*1e-6
 
 
+##  Thermal stresses
+
+clad_E=clad_Young_modulus((yy_hot_temp[:,2,2]+yy_hot_temp[:,1,2])/2)
+clad_nu=clad_Poisson_ratio((yy_hot_temp[:,2,2]+yy_hot_temp[:,1,2])/2)
+clad_r_out=clad_d_outer/2
+clad_diam_in=clad_d_outer-2*clad_thickness_0
+clad_r_in=clad_diam_out/2
+clad_r_avg=(clad_r_in+clad_r_out)/2
+
+th_stress=alfa_clad*clad_E/(1-clad_nu)*(max(yy_hot_temp[:,2,2]-yy_hot_temp[:,1,2])/2)
+
+print(f'Thermal stress as a function of z : {(th_stress)*1e-6} [MPa]')
+
+
 ## Time to rupture
 
 crit_index=np.where(critical_stress==max(critical_stress))[0][0]
 crit_T=yy_temp_clad_in[crit_index]
-LMP=(2060-max(critical_stress)*1e-6)/0.095
+LMP=(2060-max(critical_stress+max(th_stress))*1e-6)/0.095
 
 time_to_rupture=10**(LMP/crit_T-17.125)
+
+print(f'Time to rupture = {time_to_rupture/24} days')
