@@ -169,8 +169,8 @@ def fuel_Young_modulus(temperature,porosity):
 
 
 ## restructuring properties
-fuel_temp_clmn = 1700 + 273.15 # K
-fuel_temp_eqax = 1300 + 273.15 # K
+fuel_temp_clmn = 1800 + 273.15 # K
+fuel_temp_eqax = 1600 + 273.15 # K
 
 poro_asf = 0.12
 poro_clmn = 0.05

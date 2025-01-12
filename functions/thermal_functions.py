@@ -9,8 +9,6 @@ from scipy.integrate import quad as integral
 from math import sqrt,log
 import os
 
-from sympy.vector import Divergence
-
 from functions.general_functions import *
 from functions.general_properties import *
 
@@ -460,7 +458,6 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
     # VARIABLE INITIALIZATION
     isOkayColdGeo = False # used to consider only cold geo if delta gap < 0 (HP CONS)
     isFirstTime = True
-    isSurelyNegative = False
     radClmn = 0
     interf = 0
     conv = 0
@@ -484,9 +481,6 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
 
     # variation of external diameters due to swelling
     # for cladding increase of thickness! (not more than about 4 %)
-    old_fuel_d_outer = fuel_d_out_0
-    old_clad_d_outer = clad_d_out_0
-
     fuel_d_outer = swelling_fuel(z,bup, fuel_d_out_0)
     clad_d_outer = swelling_clad(z, bup, temp_array[2], clad_d_out_0)
     delta_gap = old_gap
@@ -533,38 +527,20 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
             _, _, radClmn, radVoidGuess, temp_array[4], oldMaxTemp = fuel_restructuring(z, temp_array[3], temp_array[4], fuel_d_out_0, clad_d_out_0, bup, print_stuff=False)
 
 
-        ## ITERATION SAFETY ##
+        ## ITERATION SAFETY
         conv = np.abs(prec_temp_array[4] - temp_array[4])
         #checking to avoid code divergence (or blocked convergence) happening when gap size is negative, running only another time though
         #happening if gap value, got from iteration, oscillating around zero (from pos to neg and vice versa) for every iter
         divergenceSafety = np.abs(conv) > np.abs(prec_conv) and isFirstTime==False
         notConvergenceSafety = (delta_gap < 0 and iter > 40) or delta_gap < 0 and np.abs(prec_conv-conv)<1
         gapAlmostZero = np.abs(delta_gap) < 0.5e-6 and np.abs(prec_conv-conv)<1
-        meltingPoint = fuel_temp_melting(burnup=bup)
-        meltingDivergence = temp_array[4] > meltingPoint
 
-
-        if divergenceSafety and meltingDivergence: # happening in case of gap reopening for higher burnup (i.e. 128 GWd/tonHM)
+        if divergenceSafety: # all sensitive conditions to avoid divergence...
             isOkayColdGeo = True
-
-            #further check to verify melting
-            if temp_array[4] > meltingPoint:
-                temp_array[4] = meltingPoint
-            if temp_array[3] > meltingPoint:
-                temp_array[3] = meltingPoint
-
-            clad_d_out_0 = diameter_th_exp_cladding(clad_d_outer, (temp_array[2]))
-            fuel_d_out_0 = diameter_th_exp_fuel(z, fuel_d_outer, temp_array[4], temp_array[3], bup,radVoidGuess)
-            clad_d_in_0 = clad_d_out_0 - 2 * clad_thick_0
-            delta_gap = (clad_d_in_0 - fuel_d_out_0)/2
-
-        if divergenceSafety and meltingDivergence==False: # general divergence approach here instead
-            isOkayColdGeo = True
-            fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 - 2 * delta_gap # used to reset to perform further calcs... NB clad temps not influenced by what's inside,so same value... then delta gap null!
-            fuel_d_out_0 = float(fuel_d_out_0) # code would crash without this conversion :(
-            #fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E,clad_nu, clad_E, fuel_r_void)
-            #temp_array, _ = thermal_computing(z, clad_d_out_0, fuel_d_out_0, clad_thick_0, bup,fc_contact_pressure) # de facto now gap equal to zero for thermal calc but not for mech
-
+            fuel_d_out_0 = clad_d_out_0 - 2 * clad_thick_0 - 2 * delta_gap  # used to reset to perform further calcs... NB clad temps not influenced by what's inside,so same value... then delta gap null!
+            fuel_d_out_0 = float(fuel_d_out_0)  # code would crash without this conversion :(
+            fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E,clad_nu, clad_E, fuel_r_void)
+            temp_array, _ = thermal_computing(z, clad_d_out_0, fuel_d_out_0, clad_thick_0, bup,fc_contact_pressure)  # de facto now gap equal to zero for thermal calc but not for mech
 
         if notConvergenceSafety: # if oscillating around zero - approx: linearizing around zero
             gapAlmostZero = True
@@ -575,7 +551,6 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
             fuel_d_out_0 = float(fuel_d_out_0)  # code would crash without this conversion :(
             fc_contact_pressure = contact_pressure(fuel_d_out_0 / 2, clad_d_in_0 / 2, clad_d_out_0 / 2, fuel_nu, fuel_E,clad_nu, clad_E, fuel_r_void)
 
-
         if np.abs(prec_conv-conv)<1 and delta_gap>0:    # to speed up code if too low to converge even with open gap...
             gapAlmostZero = True
         if iter == 20:
@@ -584,7 +559,7 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
             print(f"ERROR! NOT CONVERGENCE!")
             break
 
-        ## END OF ITERATION SAFETY ##
+        ## END OF ITERATION SAFETY
 
         # DEBUG INFO
         if print_debug:
@@ -614,24 +589,24 @@ def hot_geometry_general(z, clad_d_out_0, fuel_d_out_0, clad_thick_0,bup,print_s
 
     ## CONSOLE PRINT SET UP here
     if print_status: # optional "progress bar" print (see input boolean)
+        if bup > 100:
+            print(f"> WARNING! Since burn up is quite high, values computed may be quite inaccurate, nonetheless they state qualitatively what's happening")
         print(f"*************** RESULTS @ {np.round(100 * z / 0.85, 2)}% (POSITION: {np.round(z, 2)} m) *************************************************")
-        print(f"\n>GEO VARIATION DUE TO SWELLING:\nFuel diameter outer @ cold: {round(float(old_fuel),8)} m --> Now: {round(float(fuel_d_outer),8)} m")
-        print(f"Cladding d outer @ cold: {old_clad} m --> Now: {round(float(clad_d_outer),8)} m")
+        print(f"\n>GEO VARIATION DUE TO SWELLING:\nFuel diameter outer @ cold: {round(float(old_fuel*1e3),4)} mm --> Now: {round(float(fuel_d_outer*1e3),5)} mm")
+        print(f"Cladding d outer @ cold: {round(float(old_clad*1e3),4)} mm --> Now: {round(float(clad_d_outer*1e3),5)} mm")
         if radClmn != 0: # meaning that restr happened...
             print(f"\n>RESTRUCTURING HAPPENED AT LOW BURNUP (current vs temp if void region not present)")
             print(f"Temp void: {round(float(temp_array[4]), 2)} K - Temp old: {np.round(oldMaxTemp, 2)} K")
             print(f"Radius of clmn: {round(float(radClmn), 6)} m, radius of void: {round(float(radVoidGuess), 6)} m")
         print(f"\n>FINAL DATA:")
-        if divergenceSafety:
+        if divergenceSafety and isMelting == False:
             print(f"WARNING! Divergence of code, hence potential positive thermal feedback!")
-        if divergenceSafety and meltingDivergence:
-            print(f"WARNING! Possible melting of the pellet!")
         print(f"Fuel temp inner: HOT:{np.round(temp_array[4], 2)} K\nOld gap: {round(float(old_gap*1e6),4)} um --> New gap: {round(float(delta_gap*1e6),2)} um"
               f" ({round(float(100 * delta_gap / initial_delta_gap),2)}%)")
         if delta_gap < 0:
             print(f"Interference: {round(float(-interf)*1e6,2)} um")
-        print(f"Initial fuel diam ext (no sw): {round(float(old_fuel_d_outer*1e3),5)} mm --> Now: {round(float(fuel_d_out_0*1e3),5)} mm")
-        print(f"Initial cladding diam ext (no sw): {round(float(old_clad_d_outer*1e3),2)} mm --> Now: {round(float(clad_d_out_0*1e3),5)} mm")
+        print(f"Fuel diam ext: {round(float(fuel_d_out_0*1e3),5)} mm")
+        print(f"Clad diam ext: {round(float(clad_d_out_0*1e3),5)} m")
         print(f"\n********************************************************************************************************************************************************\n\n\n\n")
 
     return old_temp, temp_array, delta_gap, other, clad_d_out_0, fuel_d_out_0, fc_contact_pressure

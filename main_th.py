@@ -23,11 +23,12 @@ print_debug = True
 print_status = True
 
 # thickness from general_properties.py : 0.53 mm
-#extra_pin_len = 0.90 # m
+#extra_pin_len from general_properties.p : 0.90 m
+
 #time = (0,7,365,730) # days
 #burnup = (0,1,56,104) # GWd/ton
 burnup = (0,1,64,128) # GWd/tonHM
-res = 11
+res = 21
 
 
 ## END OF CONFIG
