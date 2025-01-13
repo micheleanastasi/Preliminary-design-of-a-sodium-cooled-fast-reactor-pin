@@ -1,7 +1,6 @@
 """
 *** HOT GEOMETRY THICKNESS AND MELTING MARGIN CALCULATION ***
 
-NB since the beginning is the most critical situation for margin to melting, then b-up=0
 """
 
 import matplotlib.pyplot as plt

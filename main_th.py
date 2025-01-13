@@ -17,8 +17,8 @@ from functions.thermal_functions import *
 
 
 ## CONFIG
-loadExisting = False # if True plotting already computed values
-print_debug = True
+loadExisting = False # if True plotting already computed values, if False calculating again
+print_debug = False
 print_status = True
 
 # thickness from general_properties.py : 0.53 mm
@@ -170,7 +170,7 @@ plt.figure(2,figsize=(16, 9))
 plt.plot(rr,rr_temp)
 plt.xlabel("Radius in [m]")
 plt.ylabel("Temperature in [K]")
-plt.title("Radial temp profile of fuel pellet @ 1 GWd/ton(HM) and midplane")
+plt.title("Radial temp profile of fuel pellet @ 1 week and midplane")
 plt.grid()
 plt.savefig(os.path.join(directory,"radialPellet_temp.png"),dpi=300, bbox_inches='tight')
 plt.show()
@@ -686,9 +686,9 @@ plt.close()
 ## gap size variation w.r.t burnup 104 ##
 plt.figure(20,figsize=(16, 9))
 
-plt.plot(xx,yy_gap[:,0]*1e6, label='Gap size @ 0 GWd/ton')
-plt.plot(xx,yy_gap[:,1]*1e6, label='Gap size @ 1 GWd/ton')
-plt.plot(xx,yy_gap[:,2]*1e6, label='Gap size @ 52 GWd/ton')
+plt.plot(xx,yy_gap[:,0]*1e6, label='Gap size @ 0 days')
+plt.plot(xx,yy_gap[:,1]*1e6, label='Gap size @ 1 week')
+plt.plot(xx,yy_gap[:,2]*1e6, label='Gap size @ 1 year')
 plt.plot(xx,yy_gap[:,3]*1e6, label='Gap size @ 2 years')
 
 plt.plot(xx,np.ones(len(xx))*initial_delta_gap*1e6, label='Initial delta gap', color='black', linestyle='--')
@@ -865,9 +865,9 @@ plt.close()
 ## Cladding diameter variation w.r.t burnup 104 ##
 plt.figure(28,figsize=(16, 9))
 
-plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter @ 0 GWd/ton')
-plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter @ 1 GWd/ton')
-plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter @ 52 GWd/ton')
+plt.plot(xx,clad_diam_out[:,0]*1e3, label='Cladding diameter @ 0 days')
+plt.plot(xx,clad_diam_out[:,1]*1e3, label='Cladding diameter @ 1 week')
+plt.plot(xx,clad_diam_out[:,2]*1e3, label='Cladding diameter @ 1 year')
 plt.plot(xx,clad_diam_out[:,3]*1e3, label='Cladding diameter @ 2 years')
 
 plt.plot(xx,np.ones(len(xx))*clad_d_outer*1e3, label='Initial fuel diameter', color='black', linestyle='--')

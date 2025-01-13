@@ -9,8 +9,8 @@ import pandas as pd
 from functions.thermal_functions import *
 
 
-burnup = 128/2
-res = 11
+burnup = 0
+res = 21
 
 #### ********************************************* DOMAIN DISCRETIZATION ****************************************** ####
 
@@ -151,26 +151,6 @@ plt.title("Axial delta temp btw clad in e clad out @ HOT GEO")
 plt.grid()
 plt.show()
 
-#### ***************** PLOT TEMPERATURES (RADIAL) ******************* ####
-plt.figure()
-plt.plot(rr,rr_temp_fuel_radial[int( len(xx)/2 ),:], label="Temp profile")
-plt.plot(rr,np.ones(len(rr))*fuel_temp_max_suggested, label="Max suggested fuel temp", color='black', linestyle='--')
-plt.plot(rr,np.ones(len(rr))*fuel_temp_melting(burnup=burnup), label="Max suggested fuel temp", color='black', linestyle='--')
-plt.xlabel("Position in [m]")
-plt.ylabel("Temperature in [K]")
-plt.title("Middle position of pin, fuel pellet temperature profile")
-plt.grid()
-plt.show()
-
-## plot 3d temp radial profile of fuel
-x,y = np.meshgrid(rr,xx)
-fig_1 = plt.figure()
-ax = fig_1.add_subplot(111, projection='3d')
-ax.plot_surface(x,y,rr_temp_fuel_radial,cmap='viridis')
-ax.set_ylabel('Position along the pin [m]')
-ax.set_xlabel('Radius [m]')
-ax.set_zlabel('Temperature [K]')
-plt.show()
 
 
 #### ***************** OTHER PROPERTIES (AXIAL) ******************* ####
