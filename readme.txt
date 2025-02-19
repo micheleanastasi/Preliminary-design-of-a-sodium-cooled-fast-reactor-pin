@@ -1,5 +1,6 @@
-GUIDE:
+PRELIMINARY DESIGN OF A SODIUM-COOLED FAST REACTOR PIN
 
+GUIDE:
 Main script:
 - main_th.py --> main script for thermal, remember to switch LoadExisting according to needs
 - main_mech.py --> main script for mechanical, remember to switch LoadExisting according to needs
