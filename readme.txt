@@ -1,4 +1,7 @@
+++ LOOK THE PDF FILE IF INTERESTED ONLY IN FINAL RESULTS ++
+
 PRELIMINARY DESIGN OF A SODIUM-COOLED FAST REACTOR PIN
+That was a project group which I worked for, contribuiting heavily on the design/coding part.
 
 GUIDE:
 Main script:
